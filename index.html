@@ -69,9 +69,17 @@ label.okwrap{display:flex; align-items:center; gap:6px; margin-top:6px; font-siz
   cursor:pointer; user-select:none;}
 label.okwrap input{accent-color:var(--accent); width:15px; height:15px; cursor:pointer;}
 tr.confirmed label.okwrap, tr.renamed label.okwrap{color:var(--accent); font-weight:600;}
-.remap{margin-top:6px; font-size:11.5px; line-height:1.4; color:var(--accent); background:var(--accent-soft);
-  border-radius:6px; padding:4px 8px; max-width:260px;}
-.remap b{font-weight:650;}
+.remap{margin-top:8px; font-size:12px; line-height:1.45; color:var(--accent); background:var(--accent-soft);
+  border:1px solid var(--accent); border-left-width:4px; border-radius:6px; padding:6px 9px; max-width:290px;}
+.remap-h{display:flex; align-items:center; gap:5px; font-weight:700; font-size:10.5px; text-transform:uppercase;
+  letter-spacing:.05em; margin-bottom:4px;}
+.remap-line{display:flex; flex-wrap:wrap; gap:2px 5px; margin-top:3px;}
+.remap-ent{font-weight:700; background:var(--accent); color:var(--btn-on-ink); border-radius:4px;
+  padding:0 5px; font-size:11px;}
+.remap-to{color:var(--ink);}
+.remap-arrow{color:var(--accent); font-weight:700;}
+tr.hasremap td.concept::after{content:"\21c4"; margin-left:6px; color:var(--accent); font-weight:700;
+  font-size:12px; vertical-align:1px;}
 .sp{margin:0 0 6px;}
 .sp:last-child{margin-bottom:0;}
 .verrow{display:flex; align-items:center; gap:4px; margin-top:7px; flex-wrap:wrap;}
@@ -451,15 +459,21 @@ function render(){
       const accKeys = Object.keys(acc);
       if (accKeys.length) {
         const full = { ST: 'Sole Trader', PT: 'Partnership', LLP: 'LLP', LTD: 'Limited Company' };
-        decCell += '<div class="remap" title="Confirmed via Check IRIS export">On another TB this maps to: ' +
-          accKeys.map(e => '<b>' + (full[e] || e) + '</b> &rarr; &ldquo;' + esc(acc[e]) + '&rdquo;').join('; ') +
+        decCell += '<div class="remap" title="Confirmed via Check IRIS export">' +
+          '<div class="remap-h">\u21c4 Maps differently on ' + accKeys.length +
+          ' other TB' + (accKeys.length > 1 ? 's' : '') + '</div>' +
+          accKeys.map(e => '<div class="remap-line"><span class="remap-ent">' + (full[e] || e) +
+            '</span><span class="remap-arrow">&rarr;</span><span class="remap-to">&ldquo;' +
+            esc(acc[e]) + '&rdquo;</span></div>').join('') +
           '</div>';
       }
     }
     const notes = esc(r.notes).replace(/^WARNING:/, '<span class="warn">WARNING:</span>');
-    const trCls = s.fin ? 'finalr'
+    const hasRemap = Object.keys(s.acc || {}).length > 0;
+    const trCls = ((s.fin ? 'finalr'
                         : r.dec ? 'needdec' + (decided ? ' done' : '')
-                        : ((s.note || '').trim() ? 'renamed' : (s.ok ? 'confirmed' : ''));
+                        : ((s.note || '').trim() ? 'renamed' : (s.ok ? 'confirmed' : ''))) +
+                   (hasRemap ? ' hasremap' : '')).trim();
     secBuf += '<tr' + (trCls ? ' class="' + trCls + '"' : '') + '>' +
       '<td class="num">' + r.n + '</td>' +
       '<td class="concept">' + esc(r.concept) + '</td>' +
