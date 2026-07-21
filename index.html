@@ -83,9 +83,10 @@ tr.hasremap td.concept::after{content:"\21c4"; margin-left:6px; color:var(--acce
 .sp{margin:0 0 6px;}
 .sp:last-child{margin-bottom:0;}
 .verrow{display:flex; align-items:center; gap:4px; margin-top:7px; flex-wrap:wrap;}
-.ver-ent{font-size:10px; font-weight:650; letter-spacing:.04em; border-radius:4px; padding:1px 6px;
-  background:var(--chip-bg); color:var(--mut); border:1px solid transparent;}
-.ver-ent.on{background:var(--accent-soft); color:var(--accent); border-color:var(--accent);}
+button.ver-ent{font-size:10px; font-weight:650; letter-spacing:.04em; border-radius:4px; padding:1px 6px;
+  background:var(--chip-bg); color:var(--mut); border:1px solid transparent; cursor:pointer; font-family:inherit;}
+button.ver-ent.on{background:var(--accent-soft); color:var(--accent); border-color:var(--accent);}
+button.ver-ent:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
 button.finbtn{margin-left:auto; background:var(--panel); border:1px solid var(--line); color:var(--mut);
   border-radius:6px; padding:3px 10px; font:11.5px/1.3 inherit; font-family:inherit; font-weight:600; cursor:pointer;}
 button.finbtn.isfin{background:var(--accent); border-color:var(--accent); color:var(--btn-on-ink);}
@@ -448,8 +449,10 @@ function render(){
     {
       const ver = s.ver || {};
       decCell += '<div class="verrow">' +
-        r.ents.split('+').map(e => '<span class="ver-ent' + (ver[e] ? ' on' : '') +
-          '" title="Green = seen mapped in an IRIS export check">' + e + (ver[e] ? ' \u2713' : '') + '</span>').join('') +
+        r.ents.split('+').map(e => '<button type="button" class="ver-ent' + (ver[e] ? ' on' : '') +
+          '" data-n="' + r.n + '" data-e="' + e + '" aria-pressed="' + !!ver[e] +
+          '" title="' + e + (ver[e] ? ' verified — click to reset' : ' unverified — click to verify') + '">' +
+          e + (ver[e] ? ' \u2713' : '') + '</button>').join('') +
         '<button class="finbtn' + (s.fin ? ' isfin' : '') + '" data-n="' + r.n + '">' +
         (s.fin ? 'Unfinalise' : 'Mark final') + '</button></div>';
       // Accepted cross-mappings: which nominal this heading is remapped to when
@@ -497,6 +500,15 @@ tb.addEventListener('change', e => {
   render();
 });
 tb.addEventListener('click', e => {
+  const vb = e.target.closest('button.ver-ent');
+  if (vb) {
+    const n = +vb.dataset.n, entity = vb.dataset.e;
+    const ver = Object.assign({}, st(n).ver || {});
+    ver[entity] = !ver[entity];
+    setSt(n, { ver: ver });
+    render();
+    return;
+  }
   const fb = e.target.closest('button.finbtn');
   if (fb) {
     const n = +fb.dataset.n;
