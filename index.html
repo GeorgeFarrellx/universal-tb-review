@@ -1,0 +1,1154 @@
+<title>Universal TB Reconciliation — review</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root{
+  --bg:#fafbf9; --panel:#f1f4f0; --line:#dde3dd; --ink:#1c2422; --mut:#5c6a63;
+  --accent:#1f6e5c; --accent-soft:#e3eee9; --amber:#b26b27; --amber-soft:#f6ead9;
+  --chip-bg:#e8ece8; --hl:#fdf6ec; --btn-on-ink:#ffffff;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#141917; --panel:#1b211e; --line:#2c342f; --ink:#e4e9e6; --mut:#93a099;
+  --accent:#5cb89f; --accent-soft:#1e332c; --amber:#d99a55; --amber-soft:#33271a;
+  --chip-bg:#262d29; --hl:#1f2019; --btn-on-ink:#0e1512;
+}}
+:root[data-theme="dark"]{
+  --bg:#141917; --panel:#1b211e; --line:#2c342f; --ink:#e4e9e6; --mut:#93a099;
+  --accent:#5cb89f; --accent-soft:#1e332c; --amber:#d99a55; --amber-soft:#33271a;
+  --chip-bg:#262d29; --hl:#1f2019; --btn-on-ink:#0e1512;
+}
+:root[data-theme="light"]{
+  --bg:#fafbf9; --panel:#f1f4f0; --line:#dde3dd; --ink:#1c2422; --mut:#5c6a63;
+  --accent:#1f6e5c; --accent-soft:#e3eee9; --amber:#b26b27; --amber-soft:#f6ead9;
+  --chip-bg:#e8ece8; --hl:#fdf6ec; --btn-on-ink:#ffffff;
+}
+body{background:var(--bg); color:var(--ink);
+  font:14px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; margin:0;}
+.wrap{max-width:1220px; margin:0 auto; padding:28px 24px 80px;}
+header.mast{display:flex; flex-wrap:wrap; align-items:baseline; gap:8px 18px; margin-bottom:6px;}
+h1{font-family:Georgia,"Times New Roman",serif; font-weight:600; font-size:26px; margin:0; text-wrap:balance;}
+.sub{color:var(--mut); font-size:13px;}
+.lede{max-width:76ch; color:var(--mut); font-size:13px;}
+.stats{display:flex; flex-wrap:wrap; gap:10px; margin:18px 0 20px;}
+.stat{background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:10px 14px; min-width:104px;}
+.stat b{display:block; font-size:20px; font-variant-numeric:tabular-nums; font-weight:650;}
+.stat span{font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--mut);}
+.stat.dec b{color:var(--amber);}
+.stat.prog b{color:var(--accent);}
+.bar{position:sticky; top:0; z-index:5; background:var(--bg); border-bottom:1px solid var(--line);
+  padding:10px 0; display:flex; flex-wrap:wrap; gap:8px; align-items:center;}
+.bar input[type=search]{flex:1 1 180px; min-width:150px; background:var(--panel); color:var(--ink);
+  border:1px solid var(--line); border-radius:6px; padding:7px 10px; font:inherit;}
+.bar input[type=search]:focus{outline:2px solid var(--accent); outline-offset:1px;}
+.chips{display:flex; flex-wrap:wrap; gap:6px;}
+button.chip{background:var(--chip-bg); color:var(--ink); border:1px solid var(--line); cursor:pointer;
+  border-radius:999px; padding:5px 12px; font:12px/1.2 inherit; font-family:inherit;}
+button.chip[aria-pressed="true"]{background:var(--accent); border-color:var(--accent); color:var(--btn-on-ink);}
+button.chip:focus-visible, button.act:focus-visible, button.dbtn:focus-visible{
+  outline:2px solid var(--accent); outline-offset:2px;}
+select{background:var(--panel); color:var(--ink); border:1px solid var(--line); border-radius:6px;
+  padding:6px 8px; font:inherit; max-width:180px;}
+.count{font-size:12px; color:var(--mut); margin-left:auto; font-variant-numeric:tabular-nums; white-space:nowrap;}
+.actions{display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:12px 0 2px;}
+button.act{background:var(--panel); color:var(--ink); border:1px solid var(--line); border-radius:6px;
+  cursor:pointer; padding:7px 13px; font:13px/1.2 inherit; font-family:inherit; font-weight:600;}
+button.act.primary{background:var(--accent); border-color:var(--accent); color:var(--btn-on-ink);}
+.actions .hint{font-size:12px; color:var(--mut);}
+.tblwrap{overflow-x:auto; margin-top:10px;}
+table{border-collapse:collapse; width:100%; min-width:900px;}
+th{font-size:11px; text-transform:uppercase; letter-spacing:.07em; color:var(--mut); text-align:left;
+  padding:8px 10px; border-bottom:2px solid var(--line); white-space:nowrap;}
+td{padding:9px 10px; border-bottom:1px solid var(--line); vertical-align:top;}
+tr.sec td{background:var(--panel); font-weight:650; font-size:13px; padding:7px 10px;}
+tr.sec .seccount{color:var(--mut); font-weight:400; font-size:12px; margin-left:8px;}
+td.num{color:var(--mut); font-variant-numeric:tabular-nums; white-space:nowrap;}
+td.concept{font-weight:600; min-width:130px; max-width:200px;}
+tr.needdec{background:var(--hl); box-shadow:inset 3px 0 0 var(--amber);}
+tr.needdec.done{box-shadow:inset 3px 0 0 var(--accent);}
+tr.renamed, tr.confirmed{box-shadow:inset 3px 0 0 var(--accent);}
+label.okwrap{display:flex; align-items:center; gap:6px; margin-top:6px; font-size:12px; color:var(--mut);
+  cursor:pointer; user-select:none;}
+label.okwrap input{accent-color:var(--accent); width:15px; height:15px; cursor:pointer;}
+tr.confirmed label.okwrap, tr.renamed label.okwrap{color:var(--accent); font-weight:600;}
+.remap{margin-top:6px; font-size:11.5px; line-height:1.4; color:var(--accent); background:var(--accent-soft);
+  border-radius:6px; padding:4px 8px; max-width:260px;}
+.remap b{font-weight:650;}
+.sp{margin:0 0 6px;}
+.sp:last-child{margin-bottom:0;}
+.verrow{display:flex; align-items:center; gap:4px; margin-top:7px; flex-wrap:wrap;}
+.ver-ent{font-size:10px; font-weight:650; letter-spacing:.04em; border-radius:4px; padding:1px 6px;
+  background:var(--chip-bg); color:var(--mut); border:1px solid transparent;}
+.ver-ent.on{background:var(--accent-soft); color:var(--accent); border-color:var(--accent);}
+button.finbtn{margin-left:auto; background:var(--panel); border:1px solid var(--line); color:var(--mut);
+  border-radius:6px; padding:3px 10px; font:11.5px/1.3 inherit; font-family:inherit; font-weight:600; cursor:pointer;}
+button.finbtn.isfin{background:var(--accent); border-color:var(--accent); color:var(--btn-on-ink);}
+button.finbtn:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+tr.finalr{box-shadow:inset 3px 0 0 var(--accent); opacity:.9;}
+.stbl{display:inline-block; min-width:24px; text-align:right; font-size:10px; font-weight:650;
+  font-variant-numeric:tabular-nums; color:var(--mut); background:var(--chip-bg); border-radius:4px;
+  padding:1px 5px; margin-right:7px; vertical-align:1px;}
+.entchips{display:inline-flex; gap:3px; margin-left:6px; vertical-align:1px;}
+.ent{font-size:10px; font-weight:650; letter-spacing:.04em; background:var(--chip-bg); color:var(--mut);
+  border-radius:4px; padding:1px 5px;}
+.pill{display:inline-block; font-size:11px; font-weight:600; border-radius:999px; padding:2px 9px; white-space:nowrap;}
+.pill.core{background:var(--accent-soft); color:var(--accent);}
+.pill.spec{background:var(--chip-bg); color:var(--mut);}
+.pill.near{background:var(--amber-soft); color:var(--amber);}
+td.decide{min-width:190px;}
+.sugg{font-size:11.5px; color:var(--mut); margin-bottom:5px; white-space:nowrap;}
+.sugg b.Collapse{color:var(--accent);}
+.sugg b.Keep{color:var(--amber);}
+.canonprev{font-size:12px; margin:-2px 0 6px; color:var(--accent); max-width:260px;}
+.canonprev .arrow{color:var(--mut);}
+.canonprev b{font-weight:650;}
+.canonprev .src{color:var(--mut); font-weight:400; font-size:11px;}
+button.simplechip{display:block; background:var(--accent-soft); color:var(--accent); border:1px dashed var(--accent);
+  border-radius:6px; cursor:pointer; padding:3px 9px; margin:-2px 0 6px; font:11.5px/1.3 inherit;
+  font-family:inherit; text-align:left; max-width:260px;}
+button.simplechip:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+button.simplechip .src{color:var(--mut); font-size:10.5px;}
+.dbtns{display:flex; gap:5px; margin-bottom:6px;}
+button.dbtn{background:var(--chip-bg); color:var(--ink); border:1px solid var(--line); border-radius:6px;
+  cursor:pointer; padding:4px 11px; font:12px/1.2 inherit; font-family:inherit; font-weight:600;}
+button.dbtn[aria-pressed="true"].c{background:var(--accent); border-color:var(--accent); color:var(--btn-on-ink);}
+button.dbtn[aria-pressed="true"].k{background:var(--amber); border-color:var(--amber); color:var(--btn-on-ink);}
+input.note{width:100%; box-sizing:border-box; background:var(--bg); color:var(--ink);
+  border:1px solid var(--line); border-radius:6px; padding:5px 8px; font:12px/1.3 inherit; font-family:inherit;}
+input.note:focus{outline:2px solid var(--accent); outline-offset:1px;}
+td.notes{color:var(--mut); font-size:12.5px; max-width:300px;}
+td.notes .warn{color:var(--amber); font-weight:650;}
+.empty{padding:40px; text-align:center; color:var(--mut);}
+details.ghsync{margin:14px 0 2px; border:1px solid var(--line); border-radius:6px; padding:8px 12px;
+  background:var(--panel);}
+details.ghsync summary{cursor:pointer; font-size:13px; font-weight:600; color:var(--mut);}
+details.ghsync input{background:var(--bg); color:var(--ink); border:1px solid var(--line);
+  border-radius:6px; padding:7px 10px; font:13px/1.2 inherit; font-family:inherit;}
+details.ghsync input#ghtoken{flex:1 1 260px; min-width:200px;}
+details.ghsync code{font-family:ui-monospace,Consolas,monospace; font-size:11.5px;}
+dialog#exportdlg, dialog#checkdlg{background:var(--bg); color:var(--ink); border:1px solid var(--line);
+  border-radius:8px; max-width:680px; width:92vw; padding:18px;}
+dialog#exportdlg::backdrop, dialog#checkdlg::backdrop{background:rgba(0,0,0,.45);}
+dialog#exportdlg h2, dialog#checkdlg h2{font-size:16px; margin:0 0 8px;}
+dialog#checkdlg{max-width:780px;}
+dialog#checkdlg input[type=file]{font:13px/1.3 inherit; font-family:inherit; color:var(--mut);}
+.checkres{max-height:46vh; overflow-y:auto; margin-top:10px;}
+.checkres h3{font-size:13px; margin:14px 0 6px;}
+.checkres h3.okh{color:var(--accent);}
+.checkres h3.badh{color:var(--amber);}
+.checkres table{border-collapse:collapse; width:100%; font-size:12px;}
+.checkres td, .checkres th{border-bottom:1px solid var(--line); padding:4px 8px; text-align:left; vertical-align:top;}
+.checkres th{font-size:10px; text-transform:uppercase; letter-spacing:.06em; color:var(--mut);}
+.checkres td.cnum{font-variant-numeric:tabular-nums; color:var(--mut); white-space:nowrap;}
+dialog#exportdlg textarea{width:100%; box-sizing:border-box; height:300px; background:var(--panel);
+  color:var(--ink); border:1px solid var(--line); border-radius:6px; padding:10px;
+  font:12px/1.45 ui-monospace,Consolas,monospace;}
+.toast{position:fixed; bottom:18px; left:50%; transform:translateX(-50%); background:var(--ink);
+  color:var(--bg); border-radius:6px; padding:8px 16px; font-size:13px; opacity:0; pointer-events:none;
+  transition:opacity .2s ease;}
+.toast.show{opacity:1;}
+@media (prefers-reduced-motion: reduce){.toast{transition:none;}}
+
+/* ---- Phone layout: table collapses to one card per row, no sideways scroll ---- */
+@media (max-width:720px){
+  .wrap{padding:16px 12px 60px;}
+  h1{font-size:20px;}
+  .stats{gap:6px;}
+  .stat{min-width:86px; padding:8px 10px;}
+  .stat b{font-size:17px;}
+  /* iOS zooms into focused inputs under 16px — keep all inputs at 16px */
+  .bar input[type=search], input.note, select, details.ghsync input{font-size:16px;}
+  .bar input[type=search]{flex:1 1 100%;}
+  .count{flex-basis:100%; margin-left:0;}
+  button.chip{padding:8px 13px;}
+  button.act{padding:10px 14px;}
+  button.dbtn{padding:8px 16px;}
+  .tblwrap{overflow-x:visible;}
+  table{min-width:0; display:block;}
+  thead{display:none;}
+  tbody{display:block;}
+  tr{display:block; padding:10px 10px 12px; border-bottom:1px solid var(--line);}
+  tr.sec{padding:8px 10px;}
+  td{display:block; border:0; padding:2px 0; max-width:none;}
+  td.num, td:nth-child(3){display:inline-block; vertical-align:middle; padding-right:8px;}
+  td.concept{display:inline-block; vertical-align:middle; padding-right:8px; max-width:none;}
+  td:nth-child(4){margin-top:6px;}
+  td.decide{margin-top:6px;}
+  td.notes{margin-top:4px; font-size:12px;}
+  .canonprev, button.simplechip, .sugg{max-width:none;}
+  dialog#exportdlg textarea{height:220px; font-size:12px;}
+}
+</style>
+
+<div class="wrap">
+<header class="mast">
+  <h1>Universal Trial Balance — reconciliation review</h1>
+  <span class="sub">EOW-001 Stage&nbsp;1 · union of the four IRIS entity-type heading lists · PR&nbsp;#1436</span>
+</header>
+<p class="lede">Amber-striped rows are the 74 near-duplicate groups that need your call.
+On each one, click <b>Collapse</b> or <b>Keep</b> (the stripe turns green once decided). Pressing Collapse
+shows the heading the group will become — the default is the spelling shared by the most entities, and where
+your working simplified list (or a prefix-strip) offers a shorter name, a dashed green chip suggests it:
+click the chip to use it. To use any other name, just type it in the box (e.g. type <i>Sales</i> and the
+group collapses into “Sales”); the preview updates as you type. Rows with no decision to make can be
+renamed too — every white row has a rename box (and a chip where a simpler name is available), so you can
+turn “Cost of sales - Purchases” into just “Purchases” — or tick <b>Confirmed as is</b> to keep the original
+name and include the row in your “changes only” paste. The <b>Still to review</b> filter shows whatever
+you haven't yet decided, renamed or ticked, so you can work down the list in order. The box also takes plain notes or a typed decision instead of the buttons.
+Your choices are saved in this browser as you go — when you're done, use <b>Copy decisions for Claude</b>
+and paste the result back into the chat.</p>
+
+<div class="stats">
+  <div class="stat"><b>271</b><span>concept rows</span></div>
+  <div class="stat"><b>58</b><span>common core</span></div>
+  <div class="stat"><b>139</b><span>entity-specific</span></div>
+  <div class="stat dec"><b>74</b><span>near-duplicates</span></div>
+  <div class="stat"><b>64 / 10</b><span>suggest collapse / keep</span></div>
+  <div class="stat prog"><b id="progstat">0 / 74</b><span>decided</span></div>
+  <div class="stat prog"><b id="finstat">0</b><span>finalised</span></div>
+</div>
+
+<div class="bar">
+  <input type="search" id="q" placeholder="Search headings, concepts, notes…" aria-label="Search">
+  <div class="chips" role="group" aria-label="Filter rows">
+    <button class="chip" data-f="all" aria-pressed="false">All</button>
+    <button class="chip" data-f="dec" aria-pressed="true">Decisions only</button>
+    <button class="chip" data-f="undec" aria-pressed="false">Still to review</button>
+    <button class="chip" data-f="Common core" aria-pressed="false">Core</button>
+    <button class="chip" data-f="Entity-specific" aria-pressed="false">Entity</button>
+    <button class="chip" data-f="fin" aria-pressed="false">Finalised</button>
+  </div>
+  <select id="secsel" aria-label="Jump to section"><option value="">All sections</option></select>
+  <span class="count" id="count"></span>
+</div>
+
+<div class="actions">
+  <button class="act primary" id="copyBtn">Copy decisions for Claude</button>
+  <button class="act" id="dlBtn" hidden>Download decisions (.md)</button>
+  <button class="act" id="tbCopyBtn">Copy live TB (IRIS paste)</button>
+  <button class="act" id="tbCopyMineBtn">Copy my changes only (IRIS paste)</button>
+  <select id="valmode" aria-label="Value pasted next to each heading">
+    <option value="one">values: all 1</option>
+    <option value="seq">values: stable row numbers</option>
+  </select>
+  <button class="act" id="tbDlBtn" hidden>Download live TB (.txt)</button>
+  <button class="act" id="checkBtn">Check IRIS export…</button>
+  <button class="act" id="fillBtn">Accept suggestions for the rest</button>
+  <button class="act" id="clearBtn">Clear all my decisions</button>
+  <span class="hint">TB copies come out as heading&nbsp;&rarr;&nbsp;tab&nbsp;&rarr;&nbsp;1, ready to paste straight into IRIS.</span>
+</div>
+
+<details class="ghsync" id="ghsync">
+  <summary>GitHub sync — save/load progress to the repo</summary>
+  <div class="actions" style="margin-top:8px">
+    <input id="ghtoken" type="password" autocomplete="off" placeholder="GitHub fine-grained token (Contents: read/write)">
+    <input id="ghbranch" type="text" placeholder="branch" size="26">
+    <button class="act" id="ghSaveBtn">Save progress to GitHub</button>
+    <button class="act" id="ghLoadBtn">Load progress from GitHub</button>
+  </div>
+  <p class="hint" id="ghstatus" style="margin:6px 0 0">Saves your decisions, renames and ticks to
+  <code>Iris TBs/universal-tb-progress.json</code> in GeorgeFarrellx/PDF-Converter. The token is kept
+  only in this browser's local storage — don't enter it on a shared machine.</p>
+</details>
+
+<div class="tblwrap">
+<table>
+  <thead><tr>
+    <th>#</th><th>Concept</th><th>Class</th><th>IRIS spellings (with entities)</th>
+    <th>Your decision</th><th>Notes</th>
+  </tr></thead>
+  <tbody id="tb"></tbody>
+</table>
+<div class="empty" id="empty" hidden>No rows match the current filters.</div>
+</div>
+</div>
+
+<dialog id="checkdlg">
+  <h2>Check an IRIS export</h2>
+  <p class="hint" style="margin:0 0 8px">Paste a TB into IRIS using <b>values: stable row numbers</b>, let IRIS map it,
+  export the TB from IRIS (CSV <b>or</b> .xlsx both work), then load that file here. Each value in the export is traced
+  back to the heading that carried it, so you can see exactly where every heading landed.</p>
+  <div class="actions" style="margin:0 0 4px">
+    <select id="ckentity" aria-label="Which entity's TB is this export from">
+      <option value="ST">This export is a Sole Trader TB</option>
+      <option value="PT">This export is a Partnership TB</option>
+      <option value="LLP">This export is an LLP TB</option>
+      <option value="LTD">This export is a Limited Company TB</option>
+    </select>
+    <select id="ckscope" aria-label="Compare against">
+      <option value="mine">compare: my changes only</option>
+      <option value="all">compare: full TB</option>
+    </select>
+    <input type="file" id="ckfile" accept=".csv,.txt,.xlsx,text/csv,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+  </div>
+  <div class="checkres" id="checkres"></div>
+  <div class="actions" style="margin-top:10px">
+    <button class="act" id="ckCopyRep">Copy report</button>
+    <button class="act" id="ckDlRep" hidden>Download report (.md)</button>
+    <button class="act" id="ckClose">Close</button>
+  </div>
+</dialog>
+
+<dialog id="exportdlg">
+  <h2>Copy this and paste it to Claude</h2>
+  <textarea id="exporttxt" readonly aria-label="Decisions export"></textarea>
+  <div class="actions" style="margin-top:10px">
+    <button class="act primary" id="dlgCopy">Copy</button>
+    <button class="act" id="dlgClose">Close</button>
+  </div>
+</dialog>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+const DATA = {"rows": [{"n": 1, "sec": "Income", "concept": "Turnover - Sales", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Sales", "ents": ["ST", "PT"]}, {"text": "Turnover - Sales", "ents": ["LLP", "LTD"]}], "rec": "Collapse", "dec": true, "canon": "Sales", "simple": "Sales", "simpleSrc": "list", "notes": "2 spellings: ST/PT 'Sales...', LLP/LTD 'Turnover - ...'."}, {"n": 2, "sec": "Income", "concept": "Turnover - Fees", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Sales - Fees", "ents": ["ST", "PT"]}, {"text": "Turnover - Fees", "ents": ["LLP", "LTD"]}], "rec": "Collapse", "dec": true, "canon": "Sales - Fees", "simple": "Turnover - Fees", "simpleSrc": "list", "notes": "2 spellings: ST/PT 'Sales...', LLP/LTD 'Turnover - ...'."}, {"n": 3, "sec": "Income", "concept": "Turnover - Reimbursed expenses", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Sales - Reimbursed expenses", "ents": ["ST", "PT"]}, {"text": "Turnover - Reimbursed expenses", "ents": ["LLP", "LTD"]}], "rec": "Collapse", "dec": true, "canon": "Sales - Reimbursed expenses", "simple": "Reimbursed Expenses", "simpleSrc": "list", "notes": "2 spellings: ST/PT 'Sales...', LLP/LTD 'Turnover - ...'."}, {"n": 4, "sec": "Cost of sales", "concept": "Purchases", "cls": "Common core", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Cost of sales - Purchases", "ents": ["ST", "PT", "LLP", "LTD"]}], "rec": "Shared", "dec": false, "canon": "Cost of sales - Purchases", "simple": "Purchases", "simpleSrc": "list", "notes": ""}, {"n": 5, "sec": "Cost of sales", "concept": "Stock movement (in cost of sales)", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Cost of sales - Decrease/(increase) in stocks", "ents": ["ST", "PT", "LLP"]}, {"text": "Cost of sales - Increase/decrease in stocks", "ents": ["LTD"]}], "rec": "Keep", "dec": true, "canon": "Cost of sales - Decrease/(increase) in stocks", "simple": "Increase/Decrease In Stocks", "simpleSrc": "list", "notes": "WARNING: the two spellings state opposite sign conventions ('Decrease/(increase)' vs 'Increase/decrease'). Verify the sign IRIS expects per entity before collapsing; safest to keep both spellings."}, {"n": 6, "sec": "Cost of sales", "concept": "Subcontractor costs", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Construction industry - Subcontractor costs", "ents": ["ST", "PT", "LLP"]}, {"text": "Cost of sales - Subcontractor costs", "ents": ["LTD"]}], "rec": "Collapse", "dec": true, "canon": "Construction industry - Subcontractor costs", "simple": "Subcontractor Costs", "simpleSrc": "list", "notes": "2 spellings: ST/PT/LLP 'Construction industry - ...', LTD 'Cost of sales - ...'."}, {"n": 7, "sec": "Cost of sales", "concept": "Direct labour", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Cost of sales - Direct labour", "ents": ["ST", "LTD"]}, {"text": "Other direct costs - Direct labour", "ents": ["PT", "LLP"]}], "rec": "Collapse", "dec": true, "canon": "Cost of sales - Direct labour", "simple": "Direct Labour", "simpleSrc": "list", "notes": "2 spellings: ST/LTD 'Cost of sales - ...', PT/LLP 'Other direct costs - ...'."}, {"n": 8, "sec": "Cost of sales", "concept": "Carriage", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Cost of sales - Carriage", "ents": ["ST", "LTD"]}, {"text": "Other direct costs - Carriage", "ents": ["PT", "LLP"]}], "rec": "Collapse", "dec": true, "canon": "Cost of sales - Carriage", "simple": "Carriage", "simpleSrc": "list", "notes": "2 spellings: ST/LTD 'Cost of sales - ...', PT/LLP 'Other direct costs - ...'."}, {"n": 9, "sec": "Cost of sales", "concept": "Discounts allowed", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Cost of sales - Discounts allowed", "ents": ["ST", "LTD"]}, {"text": "Other direct costs - Discounts allowed", "ents": ["PT", "LLP"]}], "rec": "Collapse", "dec": true, "canon": "Cost of sales - Discounts allowed", "simple": "Discounts Allowed", "simpleSrc": "list", "notes": "2 spellings: ST/LTD 'Cost of sales - ...', PT/LLP 'Other direct costs - ...'."}, {"n": 10, "sec": "Cost of sales", "concept": "Commissions payable", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Cost of sales - Commissions payable", "ents": ["ST", "LTD"]}, {"text": "Other direct costs - Commissions payable", "ents": ["PT", "LLP"]}], "rec": "Collapse", "dec": true, "canon": "Cost of sales - Commissions payable", "simple": "Commissions Payable", "simpleSrc": "list", "notes": "2 spellings: ST/LTD 'Cost of sales - ...', PT/LLP 'Other direct costs - ...'."}, {"n": 11, "sec": "Cost of sales", "concept": "Hire of plant & machinery", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Cost of sales - Hire of plant & machinery", "ents": ["ST", "LTD"]}, {"text": "Other direct costs - Hire of plant & machinery", "ents": ["PT", "LLP"]}], "rec": "Collapse", "dec": true, "canon": "Cost of sales - Hire of plant & machinery", "simple": "Hire Of Plant & Machinery", "simpleSrc": "list", "notes": "2 spellings: ST/LTD 'Cost of sales - ...', PT/LLP 'Other direct costs - ...'."}, {"n": 12, "sec": "Cost of sales", "concept": "Other direct costs", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Cost of sales - Other direct costs", "ents": ["ST", "LTD"]}, {"text": "Other direct costs", "ents": ["PT", "LLP"]}], "rec": "Collapse", "dec": true, "canon": "Other direct costs", "simple": "Other Direct Costs", "simpleSrc": "list", "notes": "2 spellings: ST/LTD 'Cost of sales - Other direct costs', PT/LLP bare 'Other direct costs'."}, {"n": 13, "sec": "Distribution costs", "concept": "Distribution costs", "cls": "Entity-specific", "ents": "LLP+LTD", "sp": [{"text": "Distribution costs", "ents": ["LLP", "LTD"]}], "rec": "Gated", "dec": false, "canon": "Distribution costs", "simple": "Distribution Costs", "simpleSrc": "list", "notes": "LLP/LTD only; no ST/PT equivalent."}, {"n": 14, "sec": "Other income", "concept": "Interest receivable", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Other business income - Interest receivable", "ents": ["ST"]}, {"text": "Other income/profits - Interest receivable", "ents": ["PT"]}, {"text": "Interest receivable", "ents": ["LLP", "LTD"]}], "rec": "Collapse", "dec": true, "canon": "Interest receivable", "simple": "Interest Receivable", "simpleSrc": "list", "notes": "3 spellings; LLP/LTD already share the bare 'Interest receivable'."}, {"n": 15, "sec": "Other income", "concept": "Rental income", "cls": "Near-duplicate", "ents": "ST+PT+LLP", "sp": [{"text": "Other business income - Rental income", "ents": ["ST"]}, {"text": "Other income/profits - Rental income", "ents": ["PT", "LLP"]}], "rec": "Keep", "dec": true, "canon": "Other income/profits - Rental income", "simple": "Rental Income", "simpleSrc": "list", "notes": "2 spellings, ST vs PT/LLP. No LTD rental-income heading - a Ltd client's rent would go to 'Other operating income' or investment income."}, {"n": 16, "sec": "Other income", "concept": "Discounts received", "cls": "Near-duplicate", "ents": "ST+PT+LLP", "sp": [{"text": "Other business income - Discounts received", "ents": ["ST"]}, {"text": "Other income/profits - Discounts received", "ents": ["PT", "LLP"]}], "rec": "Keep", "dec": true, "canon": "Other income/profits - Discounts received", "simple": "Discounts Received", "simpleSrc": "list", "notes": "2 spellings, ST vs PT/LLP. No LTD discounts-received heading."}, {"n": 17, "sec": "Other income", "concept": "Other income", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Other business income - Other income", "ents": ["ST"]}, {"text": "Other income/profits - Other income", "ents": ["PT", "LLP"]}, {"text": "Other operating income", "ents": ["LTD"]}], "rec": "Keep", "dec": true, "canon": "Other income/profits - Other income", "simple": "Other Operating Income", "simpleSrc": "list", "notes": "3 spellings. LTD's 'Other operating income' is a broader statutory concept than ST/PT/LLP 'Other income'; grouped here as the nearest equivalent - confirm before collapsing."}, {"n": 18, "sec": "Other income", "concept": "Government grants", "cls": "Entity-specific", "ents": "LTD", "sp": [{"text": "Other operating income - Government grants", "ents": ["LTD"]}], "rec": "Gated", "dec": false, "canon": "Other operating income - Government grants", "simple": "Other Operating Income - Government Grants", "simpleSrc": "list", "notes": "LTD only."}, {"n": 19, "sec": "Other income", "concept": "Income from investments", "cls": "Entity-specific", "ents": "LLP+LTD", "sp": [{"text": "Investment income - Income from investments", "ents": ["LLP", "LTD"]}], "rec": "Gated", "dec": false, "canon": "Investment income - Income from investments", "simple": "Income From Investments", "simpleSrc": "list", "notes": "LLP/LTD only."}, {"n": 20, "sec": "Other income", "concept": "Fair value adjustments on investment property", "cls": "Entity-specific", "ents": "LTD", "sp": [{"text": "Investment income - Fair value adjustments on investment property", "ents": ["LTD"]}], "rec": "Gated", "dec": false, "canon": "Investment income - Fair value adjustments on investment property", "simple": "Investment Income - Fair Value Adjustments On Investment Property", "simpleSrc": "list", "notes": "LTD only."}, {"n": 21, "sec": "Employee costs", "concept": "Wages and salaries", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Wages, salaries and other staff costs - Wages and salaries", "ents": ["ST"]}, {"text": "Employee costs - Wages and salaries", "ents": ["PT", "LLP"]}, {"text": "Administrative expenses - Employee costs - Wages and salaries", "ents": ["LTD"]}], "rec": "Collapse", "dec": true, "canon": "Employee costs - Wages and salaries", "simple": "Wages And Salaries", "simpleSrc": "list", "notes": "3 spellings differing only by section prefix; leaf text identical."}, {"n": 22, "sec": "Employee costs", "concept": "Pensions", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Wages, salaries and other staff costs - Pensions", "ents": ["ST"]}, {"text": "Employee costs - Pensions", "ents": ["PT", "LLP"]}, {"text": "Administrative expenses - Employee costs - Pensions", "ents": ["LTD"]}], "rec": "Collapse", "dec": true, "canon": "Employee costs - Pensions", "simple": "Pensions", "simpleSrc": "list", "notes": "3 spellings differing only by section prefix; leaf text identical."}, {"n": 23, "sec": "Employee costs", "concept": "Bonuses", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Wages, salaries and other staff costs - Bonuses", "ents": ["ST"]}, {"text": "Employee costs - Bonuses", "ents": ["PT", "LLP"]}, {"text": "Administrative expenses - Employee costs - Bonuses", "ents": ["LTD"]}], "rec": "Collapse", "dec": true, "canon": "Employee costs - Bonuses", "simple": "Bonuses", "simpleSrc": "list", "notes": "3 spellings differing only by section prefix; leaf text identical."}, {"n": 24, "sec": "Employee costs", "concept": "Employer's NI", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Wages, salaries and other staff costs - Employer's NI", "ents": ["ST"]}, {"text": "Employee costs - Employer's NI", "ents": ["PT", "LLP"]}, {"text": "Administrative expenses - Employee costs - Employer's NI", "ents": ["LTD"]}], "rec": "Collapse", "dec": true, "canon": "Employee costs - Employer's NI", "simple": "Employer's NI", "simpleSrc": "list", "notes": "3 spellings differing only by section prefix; leaf text identical."}, {"n": 25, "sec": "Employee costs", "concept": "Temporary staff and recruitment", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Wages, salaries and other staff costs - Temporary staff and recruitment", "ents": ["ST"]}, {"text": "Employee costs - Temporary staff and recruitment", "ents": ["PT", "LLP"]}, {"text": "Administrative expenses - Employee costs - Temporary staff and recruitment", "ents": ["LTD"]}], "rec": "Collapse", "dec": true, "canon": "Employee costs - Temporary staff and recruitment", "simple": "Temporary Staff And Recruitment", "simpleSrc": "list", "notes": "3 spellings differing only by section prefix; leaf text identical."}, {"n": 26, "sec": "Employee costs", "concept": "Staff training and welfare", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Wages, salaries and other staff costs - Staff training and welfare", "ents": ["ST"]}, {"text": "Employee costs - Staff training and welfare", "ents": ["PT", "LLP"]}, {"text": "Administrative expenses - Employee costs - Staff training and welfare", "ents": ["LTD"]}], "rec": "Collapse", "dec": true, "canon": "Employee costs - Staff training and welfare", "simple": "Staff Training And Welfare", "simpleSrc": "list", "notes": "3 spellings differing only by section prefix; leaf text identical."}, {"n": 27, "sec": "Employee costs", "concept": "Directors' salaries", "cls": "Entity-specific", "ents": "LTD", "sp": [{"text": "Administrative expenses - Employee costs - Directors' salaries", "ents": ["LTD"]}], "rec": "Gated", "dec": false, "canon": "Administrative expenses - Employee costs - Directors' salaries", "simple": "Directors' Salaries", "simpleSrc": "list", "notes": "LTD only."}, {"n": 28, "sec": "Motor & travel", "concept": "Motor expenses", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Car, van and travel expenses - Motor expenses", "ents": ["ST"]}, {"text": "Motor expenses", "ents": ["PT", "LLP"]}, {"text": "Administrative expenses - Employee costs - Motor expenses", "ents": ["LTD"]}], "rec": "Collapse", "dec": true, "canon": "Motor expenses", "simple": "Motor Expenses", "simpleSrc": "list", "notes": "3 spellings; PT/LLP already use the bare leaf."}, {"n": 29, "sec": "Motor & travel", "concept": "Travel and subsistence", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Car, van and travel expenses - Travel and subsistence", "ents": ["ST"]}, {"text": "Travel and subsistence", "ents": ["PT", "LLP"]}, {"text": "Administrative expenses - Employee costs - Travel and subsistence", "ents": ["LTD"]}], "rec": "Collapse", "dec": true, "canon": "Travel and subsistence", "simple": "Travel And Subsistence", "simpleSrc": "list", "notes": "3 spellings; PT/LLP already use the bare leaf."}, {"n": 30, "sec": "Premises costs", "concept": "Rent", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Premises costs - Rent", "ents": ["ST", "PT", "LLP"]}, {"text": "Administrative expenses - Premises costs - Rent", "ents": ["LTD"]}], "rec": "Collapse", "dec": true, "canon": "Premises costs - Rent", "simple": "Rent", "simpleSrc": "list", "notes": "2 spellings: LTD adds the 'Administrative expenses - ' prefix only."}, {"n": 31, "sec": "Premises costs", "concept": "Rates", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Premises costs - Rates", "ents": ["ST", "PT", "LLP"]}, {"text": "Administrative expenses - Premises costs - Rates", "ents": ["LTD"]}], "rec": "Collapse", "dec": true, "canon": "Premises costs - Rates", "simple": "Rates", "simpleSrc": "list", "notes": "2 spellings: LTD adds the 'Administrative expenses - ' prefix only."}, {"n": 32, "sec": "Premises costs", "concept": "Service charges", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Premises costs - Service charges", "ents": ["ST", "PT", "LLP"]}, {"text": "Administrative expenses - Premises costs - Service charges", "ents": ["LTD"]}], "rec": "Collapse", "dec": true, "canon": "Premises costs - Service charges", "simple": "Service Charges", "simpleSrc": "list", "notes": "2 spellings: LTD adds the 'Administrative expenses - ' prefix only."}, {"n": 33, "sec": "Premises costs", "concept": "Light and heat", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Premises costs - Light and heat", "ents": ["ST", "PT", "LLP"]}, {"text": "Administrative expenses - Premises costs - Light and heat", "ents": ["LTD"]}], "rec": "Collapse", "dec": true, "canon": "Premises costs - Light and heat", "simple": "Light And Heat", "simpleSrc": "list", "notes": "2 spellings: LTD adds the 'Administrative expenses - ' prefix only."}, {"n": 34, "sec": "Premises costs", "concept": "Cleaning", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Premises costs - Cleaning", "ents": ["ST", "PT", "LLP"]}, {"text": "Administrative expenses - Premises costs - Cleaning", "ents": ["LTD"]}], "rec": "Collapse", "dec": true, "canon": "Premises costs - Cleaning", "simple": "Cleaning", "simpleSrc": "list", "notes": "2 spellings: LTD adds the 'Administrative expenses - ' prefix only."}, {"n": 35, "sec": "Premises costs", "concept": "Use of home", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Premises costs - Use of home", "ents": ["ST", "PT", "LLP"]}, {"text": "Administrative expenses - Premises costs - Use of home", "ents": ["LTD"]}], "rec": "Collapse", "dec": true, "canon": "Premises costs - Use of home", "simple": "Use Of Home", "simpleSrc": "list", "notes": "2 spellings: LTD adds the 'Administrative expenses - ' prefix only."}, {"n": 36, "sec": "Premises costs", "concept": "Property insurance", "cls": "Common core", "ents": "ST+PT+LLP", "sp": [{"text": "Premises costs - Property insurance", "ents": ["ST", "PT", "LLP"]}], "rec": "Shared", "dec": false, "canon": "Premises costs - Property insurance", "simple": "Premises Costs - Property Insurance", "simpleSrc": "list", "notes": "Identical in ST/PT/LLP; no LTD property-insurance heading (LTD only has the general 'Insurance' line - see General administration)."}, {"n": 37, "sec": "Premises costs", "concept": "Repairs and maintenance", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Repairs and renewals - Repairs and maintenance", "ents": ["ST"]}, {"text": "Repairs", "ents": ["PT", "LLP"]}, {"text": "Administrative expenses - General - Repairs and maintenance", "ents": ["LTD"]}], "rec": "Keep", "dec": true, "canon": "Repairs", "simple": "Repairs And Maintenance", "simpleSrc": "list", "notes": "3 spellings and PT/LLP's bare 'Repairs' is a short token - weaker fuzzy anchor, so collapsing is riskier here."}, {"n": 38, "sec": "General administration", "concept": "Telephone and fax", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Office administration costs - Telephone and fax", "ents": ["ST"]}, {"text": "General administration expenses - Telephone and fax", "ents": ["PT"]}, {"text": "General administrative expenses - Telephone and fax", "ents": ["LLP"]}, {"text": "Administrative expenses - General - Telephone and fax", "ents": ["LTD"]}], "rec": "Collapse", "dec": true, "canon": "Office administration costs - Telephone and fax", "simple": "Telephone And Fax", "simpleSrc": "list", "notes": "4 spellings differing only by section prefix (note PT 'administration' vs LLP 'administrative'); leaf text identical."}, {"n": 39, "sec": "General administration", "concept": "Internet", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Office administration costs - Internet", "ents": ["ST"]}, {"text": "General administration expenses - Internet", "ents": ["PT"]}, {"text": "General administrative expenses - Internet", "ents": ["LLP"]}, {"text": "Administrative expenses - General - Internet", "ents": ["LTD"]}], "rec": "Collapse", "dec": true, "canon": "Office administration costs - Internet", "simple": "Internet", "simpleSrc": "list", "notes": "4 spellings differing only by section prefix (note PT 'administration' vs LLP 'administrative'); leaf text identical."}, {"n": 40, "sec": "General administration", "concept": "Postage", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Office administration costs - Postage", "ents": ["ST"]}, {"text": "General administration expenses - Postage", "ents": ["PT"]}, {"text": "General administrative expenses - Postage", "ents": ["LLP"]}, {"text": "Administrative expenses - General - Postage", "ents": ["LTD"]}], "rec": "Collapse", "dec": true, "canon": "Office administration costs - Postage", "simple": "Postage", "simpleSrc": "list", "notes": "4 spellings differing only by section prefix (note PT 'administration' vs LLP 'administrative'); leaf text identical."}, {"n": 41, "sec": "General administration", "concept": "Stationery and printing", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Office administration costs - Stationery and printing", "ents": ["ST"]}, {"text": "General administration expenses - Stationery and printing", "ents": ["PT"]}, {"text": "General administrative expenses - Stationery and printing", "ents": ["LLP"]}, {"text": "Administrative expenses - General - Stationery and printing", "ents": ["LTD"]}], "rec": "Collapse", "dec": true, "canon": "Office administration costs - Stationery and printing", "simple": "Stationery And Printing", "simpleSrc": "list", "notes": "4 spellings differing only by section prefix (note PT 'administration' vs LLP 'administrative'); leaf text identical."}, {"n": 42, "sec": "General administration", "concept": "Courier services", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Office administration costs - Courier services", "ents": ["ST"]}, {"text": "General administration expenses - Courier services", "ents": ["PT"]}, {"text": "General administrative expenses - Courier services", "ents": ["LLP"]}, {"text": "Administrative expenses - General - Courier services", "ents": ["LTD"]}], "rec": "Collapse", "dec": true, "canon": "Office administration costs - Courier services", "simple": "Courier Services", "simpleSrc": "list", "notes": "4 spellings differing only by section prefix (note PT 'administration' vs LLP 'administrative'); leaf text identical."}, {"n": 43, "sec": "General administration", "concept": "Information and publications", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Office administration costs - Information and publications", "ents": ["ST"]}, {"text": "General administration expenses - Information and publications", "ents": ["PT"]}, {"text": "General administrative expenses - Information and publications", "ents": ["LLP"]}, {"text": "Administrative expenses - General - Information and publications", "ents": ["LTD"]}], "rec": "Collapse", "dec": true, "canon": "Office administration costs - Information and publications", "simple": "Information And Publications", "simpleSrc": "list", "notes": "4 spellings differing only by section prefix (note PT 'administration' vs LLP 'administrative'); leaf text identical."}, {"n": 44, "sec": "General administration", "concept": "Equipment expensed", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Office administration costs - Equipment expensed", "ents": ["ST"]}, {"text": "General administration expenses - Equipment expensed", "ents": ["PT"]}, {"text": "General administrative expenses - Equipment expensed", "ents": ["LLP"]}, {"text": "Administrative expenses - General - Equipment expensed", "ents": ["LTD"]}], "rec": "Collapse", "dec": true, "canon": "Office administration costs - Equipment expensed", "simple": "Equipment Expensed", "simpleSrc": "list", "notes": "4 spellings differing only by section prefix (note PT 'administration' vs LLP 'administrative'); leaf text identical."}, {"n": 45, "sec": "General administration", "concept": "Equipment hire", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Office administration costs - Equipment hire", "ents": ["ST"]}, {"text": "General administration expenses - Equipment hire", "ents": ["PT"]}, {"text": "General administrative expenses - Equipment hire", "ents": ["LLP"]}, {"text": "Administrative expenses - General - Equipment hire", "ents": ["LTD"]}], "rec": "Collapse", "dec": true, "canon": "Office administration costs - Equipment hire", "simple": "Equipment Hire", "simpleSrc": "list", "notes": "4 spellings differing only by section prefix (note PT 'administration' vs LLP 'administrative'); leaf text identical."}, {"n": 46, "sec": "General administration", "concept": "Software", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Office administration costs - Software", "ents": ["ST"]}, {"text": "General administration expenses - Software", "ents": ["PT"]}, {"text": "General administrative expenses - Software", "ents": ["LLP"]}, {"text": "Administrative expenses - General - Software", "ents": ["LTD"]}], "rec": "Collapse", "dec": true, "canon": "Office administration costs - Software", "simple": "Software", "simpleSrc": "list", "notes": "4 spellings differing only by section prefix (note PT 'administration' vs LLP 'administrative'); leaf text identical."}, {"n": 47, "sec": "General administration", "concept": "General insurance", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Office administration costs - General insurance costs", "ents": ["ST"]}, {"text": "General administration expenses - General insurance costs", "ents": ["PT"]}, {"text": "General administrative expenses - General insurance costs", "ents": ["LLP"]}, {"text": "Administrative expenses - General - Insurance", "ents": ["LTD"]}], "rec": "Keep", "dec": true, "canon": "Administrative expenses - General - Insurance", "simple": "General Insurance Costs", "simpleSrc": "list", "notes": "4 spellings and the LTD leaf is 'Insurance' not 'General insurance costs' - check fuzzy match does not confuse it with Property insurance before collapsing."}, {"n": 48, "sec": "Advertising & entertaining", "concept": "Advertising and PR", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Advertising and entertaining - Advertising and PR", "ents": ["ST"]}, {"text": "Advertising, promotion and entertainment - Advertising and PR", "ents": ["PT", "LLP"]}, {"text": "Administrative expenses - Legal & professional - Advertising and PR", "ents": ["LTD"]}], "rec": "Collapse", "dec": true, "canon": "Advertising, promotion and entertainment - Advertising and PR", "simple": "Advertising And PR", "simpleSrc": "list", "notes": "3 spellings; leaf identical. (IRIS files LTD's under Legal & professional.)"}, {"n": 49, "sec": "Advertising & entertaining", "concept": "Entertaining", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Advertising and entertaining - Entertaining", "ents": ["ST"]}, {"text": "Advertising, promotion and entertainment - Entertaining", "ents": ["PT", "LLP"]}, {"text": "Administrative expenses - Employee costs - Entertaining", "ents": ["LTD"]}], "rec": "Collapse", "dec": true, "canon": "Advertising, promotion and entertainment - Entertaining", "simple": "Entertaining", "simpleSrc": "list", "notes": "3 spellings; leaf identical. (IRIS files LTD's under Employee costs.)"}, {"n": 50, "sec": "Legal & professional", "concept": "Accountancy fees", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Professional fees - Accountancy fees", "ents": ["ST"]}, {"text": "Legal and professional costs - Accountancy fees", "ents": ["PT", "LLP"]}, {"text": "Administrative expenses - Legal & professional - Accountancy fees", "ents": ["LTD"]}], "rec": "Collapse", "dec": true, "canon": "Legal and professional costs - Accountancy fees", "simple": "Accountancy Fees", "simpleSrc": "list", "notes": "3 spellings differing only by section prefix; leaf text identical."}, {"n": 51, "sec": "Legal & professional", "concept": "Solicitors fees", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Professional fees - Solicitors fees", "ents": ["ST"]}, {"text": "Legal and professional costs - Solicitors fees", "ents": ["PT", "LLP"]}, {"text": "Administrative expenses - Legal & professional - Solicitors fees", "ents": ["LTD"]}], "rec": "Collapse", "dec": true, "canon": "Legal and professional costs - Solicitors fees", "simple": "Solicitors Fees", "simpleSrc": "list", "notes": "3 spellings differing only by section prefix; leaf text identical."}, {"n": 52, "sec": "Legal & professional", "concept": "Consultancy fees", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Professional fees - Consultancy fees", "ents": ["ST"]}, {"text": "Legal and professional costs - Consultancy fees", "ents": ["PT", "LLP"]}, {"text": "Administrative expenses - Legal & professional - Consultancy fees", "ents": ["LTD"]}], "rec": "Collapse", "dec": true, "canon": "Legal and professional costs - Consultancy fees", "simple": "Consultancy Fees", "simpleSrc": "list", "notes": "3 spellings differing only by section prefix; leaf text identical."}, {"n": 53, "sec": "Legal & professional", "concept": "Management fees", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Professional fees - Management fees", "ents": ["ST"]}, {"text": "Legal and professional costs - Management fees", "ents": ["PT", "LLP"]}, {"text": "Administrative expenses - Legal & professional - Management fees", "ents": ["LTD"]}], "rec": "Collapse", "dec": true, "canon": "Legal and professional costs - Management fees", "simple": "Management Fees", "simpleSrc": "list", "notes": "3 spellings differing only by section prefix; leaf text identical."}, {"n": 54, "sec": "Legal & professional", "concept": "Other legal and professional", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Professional fees - Other legal and professional", "ents": ["ST"]}, {"text": "Legal and professional costs - Other legal and professional", "ents": ["PT", "LLP"]}, {"text": "Administrative expenses - Legal & professional - Other legal and professional", "ents": ["LTD"]}], "rec": "Collapse", "dec": true, "canon": "Legal and professional costs - Other legal and professional", "simple": "Other Legal And Professional", "simpleSrc": "list", "notes": "3 spellings differing only by section prefix; leaf text identical."}, {"n": 55, "sec": "Legal & professional", "concept": "Professional indemnity insurance", "cls": "Near-duplicate", "ents": "ST+PT+LLP", "sp": [{"text": "Professional fees - Professional indemnity insurance", "ents": ["ST"]}, {"text": "Legal and professional costs - Professional indemnity insurance", "ents": ["PT", "LLP"]}], "rec": "Collapse", "dec": true, "canon": "Legal and professional costs - Professional indemnity insurance", "simple": "Legal And Professional Costs - Professional Indemnity Insurance", "simpleSrc": "list", "notes": "2 spellings, ST vs PT/LLP; no LTD PII heading (nearest is the general 'Insurance' line)."}, {"n": 56, "sec": "Legal & professional", "concept": "Audit fees", "cls": "Entity-specific", "ents": "LTD", "sp": [{"text": "Administrative expenses - Legal & professional - Audit fees", "ents": ["LTD"]}], "rec": "Gated", "dec": false, "canon": "Administrative expenses - Legal & professional - Audit fees", "simple": "Audit Fees", "simpleSrc": "list", "notes": "LTD only."}, {"n": 57, "sec": "Bad debts", "concept": "Bad debts written off", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Bad debts - Bad debts written off", "ents": ["ST", "PT", "LLP"]}, {"text": "Administrative expenses - General - Bad debts", "ents": ["LTD"]}], "rec": "Collapse", "dec": true, "canon": "Bad debts - Bad debts written off", "simple": "Bad Debts", "simpleSrc": "list", "notes": "2 spellings: ST/PT/LLP identical, LTD 'Administrative expenses - General - Bad debts'."}, {"n": 58, "sec": "Interest & finance charges", "concept": "Interest payable - bank loans and overdrafts", "cls": "Entity-specific", "ents": "LLP+LTD", "sp": [{"text": "Interest payable - Bank loans and overdrafts", "ents": ["LLP", "LTD"]}], "rec": "Gated", "dec": false, "canon": "Interest payable - Bank loans and overdrafts", "simple": "Interest Payable - Bank Loans And Overdrafts", "simpleSrc": "list", "notes": "LLP/LTD only. ST has no bank-interest heading; PT uses its single generic 'Interest' line (next row)."}, {"n": 59, "sec": "Interest & finance charges", "concept": "Interest payable - generic (PT)", "cls": "Entity-specific", "ents": "PT", "sp": [{"text": "Interest and alternative finance payments - Interest", "ents": ["PT"]}], "rec": "Gated", "dec": false, "canon": "Interest and alternative finance payments - Interest", "simple": "Interest And Alternative Finance Payments - Interest", "simpleSrc": "list", "notes": "PT's only interest-payable heading; covers bank and other loan interest."}, {"n": 60, "sec": "Interest & finance charges", "concept": "Interest payable - other loans", "cls": "Near-duplicate", "ents": "ST+LLP+LTD", "sp": [{"text": "Interest - Other loans", "ents": ["ST"]}, {"text": "Interest payable - Other loans", "ents": ["LLP", "LTD"]}], "rec": "Collapse", "dec": true, "canon": "Interest payable - Other loans", "simple": "Interest Payable - Other Loans", "simpleSrc": "list", "notes": "2 spellings: ST 'Interest - Other loans', LLP/LTD 'Interest payable - Other loans'. PT covered by its generic Interest line."}, {"n": 61, "sec": "Interest & finance charges", "concept": "Finance leases and HP interest/charges", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Other finance charges - Finance leases and HP", "ents": ["ST", "PT", "LLP"]}, {"text": "Interest payable - Finance leases and HP", "ents": ["LTD"]}], "rec": "Collapse", "dec": true, "canon": "Other finance charges - Finance leases and HP", "simple": "Finance Leases And HP", "simpleSrc": "list", "notes": "2 spellings: ST/PT/LLP identical, LTD files it under 'Interest payable'."}, {"n": 62, "sec": "Interest & finance charges", "concept": "Bank charges", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Other finance charges - Bank charges", "ents": ["ST", "PT", "LLP"]}, {"text": "Administrative expenses - General - Bank charges", "ents": ["LTD"]}], "rec": "Collapse", "dec": true, "canon": "Other finance charges - Bank charges", "simple": "Bank Charges", "simpleSrc": "list", "notes": "2 spellings: ST/PT/LLP identical, LTD prefix differs."}, {"n": 63, "sec": "Interest & finance charges", "concept": "Factoring charges", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Other finance charges - Factoring charges", "ents": ["ST", "PT", "LLP"]}, {"text": "Administrative expenses - General - Factoring charges", "ents": ["LTD"]}], "rec": "Collapse", "dec": true, "canon": "Other finance charges - Factoring charges", "simple": "Factoring Charges", "simpleSrc": "list", "notes": "2 spellings: ST/PT/LLP identical, LTD prefix differs."}, {"n": 64, "sec": "Interest & finance charges", "concept": "Non-equity dividends (interest payable)", "cls": "Entity-specific", "ents": "LTD", "sp": [{"text": "Interest payable - Non-equity dividends", "ents": ["LTD"]}], "rec": "Gated", "dec": false, "canon": "Interest payable - Non-equity dividends", "simple": "Interest Payable - Non-Equity Dividends", "simpleSrc": "list", "notes": "LTD only."}, {"n": 65, "sec": "Depreciation & disposals", "concept": "Depreciation charge", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Depreciation and loss/profit on sale of assets - Depreciation", "ents": ["ST"]}, {"text": "Depreciation and loss/profit on sale - Depreciation", "ents": ["PT"]}, {"text": "Depreciation", "ents": ["LLP"]}, {"text": "Administrative expenses - General - Depreciation", "ents": ["LTD"]}], "rec": "Collapse", "dec": true, "canon": "Depreciation", "simple": "Depreciation", "simpleSrc": "list", "notes": "4 spellings differing only by section prefix; leaf text identical."}, {"n": 66, "sec": "Depreciation & disposals", "concept": "Amortisation of goodwill", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Depreciation and loss/profit on sale of assets - Amortisation of goodwill", "ents": ["ST"]}, {"text": "Depreciation and loss/profit on sale - Amortisation of goodwill", "ents": ["PT"]}, {"text": "Depreciation - Amortisation of goodwill", "ents": ["LLP"]}, {"text": "Administrative expenses - General - Amortisation of goodwill", "ents": ["LTD"]}], "rec": "Collapse", "dec": true, "canon": "Depreciation - Amortisation of goodwill", "simple": "Amortisation Of Goodwill", "simpleSrc": "list", "notes": "4 spellings differing only by section prefix; leaf text identical."}, {"n": 67, "sec": "Depreciation & disposals", "concept": "Other amortisation", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Depreciation and loss/profit on sale of assets - Other amortisation", "ents": ["ST"]}, {"text": "Depreciation and loss/profit on sale - Other amortisation", "ents": ["PT"]}, {"text": "Depreciation - Other amortisation", "ents": ["LLP"]}, {"text": "Administrative expenses - General - Other amortisation", "ents": ["LTD"]}], "rec": "Collapse", "dec": true, "canon": "Depreciation - Other amortisation", "simple": "Other Amortisation", "simpleSrc": "list", "notes": "4 spellings differing only by section prefix; leaf text identical."}, {"n": 68, "sec": "Depreciation & disposals", "concept": "Profit/loss on disposal of land and buildings", "cls": "Near-duplicate", "ents": "ST+PT", "sp": [{"text": "Depreciation and loss/profit on sale of assets - Profit/loss on disposal of land and buildings", "ents": ["ST"]}, {"text": "Depreciation and loss/profit on sale - Profit/loss on disposal of land and buildings", "ents": ["PT"]}], "rec": "Collapse", "dec": true, "canon": "Depreciation and loss/profit on sale - Profit/loss on disposal of land and buildings", "simple": "Depreciation And Loss/Profit On Sale - Profit/Loss On Disposal Of Land And Buildings", "simpleSrc": "list", "notes": "2 spellings, ST vs PT, leaf identical. LLP/LTD have no per-asset disposal lines - they use the 'Gains and losses' block instead (different granularity, kept as separate rows)."}, {"n": 69, "sec": "Depreciation & disposals", "concept": "Profit/loss on disposal of plant & machinery", "cls": "Near-duplicate", "ents": "ST+PT", "sp": [{"text": "Depreciation and loss/profit on sale of assets - Profit/loss on disposal of plant & machinery", "ents": ["ST"]}, {"text": "Depreciation and loss/profit on sale - Profit/loss on disposal of plant & machinery", "ents": ["PT"]}], "rec": "Collapse", "dec": true, "canon": "Depreciation and loss/profit on sale - Profit/loss on disposal of plant & machinery", "simple": "Depreciation And Loss/Profit On Sale - Profit/Loss On Disposal Of Plant & Machinery", "simpleSrc": "list", "notes": "2 spellings, ST vs PT, leaf identical. LLP/LTD have no per-asset disposal lines - they use the 'Gains and losses' block instead (different granularity, kept as separate rows)."}, {"n": 70, "sec": "Depreciation & disposals", "concept": "Profit/loss on disposal of investments", "cls": "Near-duplicate", "ents": "ST+PT", "sp": [{"text": "Depreciation and loss/profit on sale of assets - Profit/loss on disposal of investments", "ents": ["ST"]}, {"text": "Depreciation and loss/profit on sale - Profit/loss on disposal of investments", "ents": ["PT"]}], "rec": "Collapse", "dec": true, "canon": "Depreciation and loss/profit on sale - Profit/loss on disposal of investments", "simple": "Depreciation And Loss/Profit On Sale - Profit/Loss On Disposal Of Investments", "simpleSrc": "list", "notes": "2 spellings, ST vs PT, leaf identical. LLP/LTD have no per-asset disposal lines - they use the 'Gains and losses' block instead (different granularity, kept as separate rows)."}, {"n": 71, "sec": "Other expenses", "concept": "Subscriptions", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Other business expenses - Subscriptions", "ents": ["ST", "PT", "LLP"]}, {"text": "Administrative expenses - General - Subscriptions", "ents": ["LTD"]}], "rec": "Collapse", "dec": true, "canon": "Other business expenses - Subscriptions", "simple": "Subscriptions", "simpleSrc": "list", "notes": "2 spellings: ST/PT/LLP identical, LTD prefix differs."}, {"n": 72, "sec": "Other expenses", "concept": "Sundry / other expenses", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Other business expenses - Sundry expenses", "ents": ["ST"]}, {"text": "Other business expenses - Other expenses", "ents": ["PT", "LLP"]}, {"text": "Administrative expenses - General - Sundry expenses", "ents": ["LTD"]}], "rec": "Keep", "dec": true, "canon": "Other business expenses - Other expenses", "simple": "Sundry Expenses", "simpleSrc": "list", "notes": "3 spellings and two different leaves ('Sundry expenses' vs 'Other expenses') - same concept but weaker fuzzy equivalence."}, {"n": 73, "sec": "Other expenses", "concept": "Partnership charges", "cls": "Entity-specific", "ents": "PT+LLP", "sp": [{"text": "Other business expenses - Partnership charges", "ents": ["PT", "LLP"]}], "rec": "Gated", "dec": false, "canon": "Other business expenses - Partnership charges", "simple": "Other Business Expenses - Partnership Charges", "simpleSrc": "list", "notes": "PT/LLP only."}, {"n": 74, "sec": "Other expenses", "concept": "Donations", "cls": "Near-duplicate", "ents": "LLP+LTD", "sp": [{"text": "Other business expenses - Donations", "ents": ["LLP"]}, {"text": "Administrative expenses - General - Donations", "ents": ["LTD"]}], "rec": "Collapse", "dec": true, "canon": "Other business expenses - Donations", "simple": "Donations", "simpleSrc": "list", "notes": "2 spellings, LLP vs LTD; no ST/PT heading."}, {"n": 75, "sec": "Other expenses", "concept": "Loss/(profit) on foreign exchange transactions", "cls": "Near-duplicate", "ents": "LLP+LTD", "sp": [{"text": "Other business expenses - Loss/(profit) on foreign exchange transactions", "ents": ["LLP"]}, {"text": "Administrative expenses - General - Loss/(profit) on foreign exchange transactions", "ents": ["LTD"]}], "rec": "Collapse", "dec": true, "canon": "Other business expenses - Loss/(profit) on foreign exchange transactions", "simple": "Loss/(Profit) On Foreign Exchange Transactions", "simpleSrc": "list", "notes": "2 spellings, LLP vs LTD; no ST/PT heading. Distinct from the 'Gains and losses - ... foreign exchange differences' line below."}, {"n": 76, "sec": "Gains and losses", "concept": "Gain/loss from revaluation of tangible assets", "cls": "Entity-specific", "ents": "LLP+LTD", "sp": [{"text": "Gains and losses - Gain/loss from revaluation of tangible assets", "ents": ["LLP", "LTD"]}], "rec": "Gated", "dec": false, "canon": "Gains and losses - Gain/loss from revaluation of tangible assets", "simple": "Gains And Losses - Gain/Loss From Revaluation Of Tangible Assets", "simpleSrc": "list", "notes": "LLP/LTD only. ST/PT equivalents (where any) are the per-asset 'Profit/loss on disposal' lines."}, {"n": 77, "sec": "Gains and losses", "concept": "Gain/loss on sale of tangible assets", "cls": "Entity-specific", "ents": "LLP+LTD", "sp": [{"text": "Gains and losses - Gain/loss on sale of tangible assets", "ents": ["LLP", "LTD"]}], "rec": "Gated", "dec": false, "canon": "Gains and losses - Gain/loss on sale of tangible assets", "simple": "Gains And Losses - Gain/Loss On Sale Of Tangible Assets", "simpleSrc": "list", "notes": "LLP/LTD only. ST/PT equivalents (where any) are the per-asset 'Profit/loss on disposal' lines."}, {"n": 78, "sec": "Gains and losses", "concept": "Gain/loss from revaluation of intangible assets", "cls": "Entity-specific", "ents": "LLP+LTD", "sp": [{"text": "Gains and losses - Gain/loss from revaluation of intangible assets", "ents": ["LLP", "LTD"]}], "rec": "Gated", "dec": false, "canon": "Gains and losses - Gain/loss from revaluation of intangible assets", "simple": "Gains And Losses - Gain/Loss From Revaluation Of Intangible Assets", "simpleSrc": "list", "notes": "LLP/LTD only. ST/PT equivalents (where any) are the per-asset 'Profit/loss on disposal' lines."}, {"n": 79, "sec": "Gains and losses", "concept": "Gain/loss on sale of intangible assets", "cls": "Entity-specific", "ents": "LLP+LTD", "sp": [{"text": "Gains and losses - Gain/loss on sale of intangible assets", "ents": ["LLP", "LTD"]}], "rec": "Gated", "dec": false, "canon": "Gains and losses - Gain/loss on sale of intangible assets", "simple": "Gains And Losses - Gain/Loss On Sale Of Intangible Assets", "simpleSrc": "list", "notes": "LLP/LTD only. ST/PT equivalents (where any) are the per-asset 'Profit/loss on disposal' lines."}, {"n": 80, "sec": "Gains and losses", "concept": "Gain/loss from revaluation of investment property", "cls": "Entity-specific", "ents": "LLP+LTD", "sp": [{"text": "Gains and losses - Gain/loss from revaluation of investment property", "ents": ["LLP", "LTD"]}], "rec": "Gated", "dec": false, "canon": "Gains and losses - Gain/loss from revaluation of investment property", "simple": "Gains And Losses - Gain/Loss From Revaluation Of Investment Property", "simpleSrc": "list", "notes": "LLP/LTD only. ST/PT equivalents (where any) are the per-asset 'Profit/loss on disposal' lines."}, {"n": 81, "sec": "Gains and losses", "concept": "Gain/loss on sale of investment property", "cls": "Entity-specific", "ents": "LLP+LTD", "sp": [{"text": "Gains and losses - Gain/loss on sale of investment property", "ents": ["LLP", "LTD"]}], "rec": "Gated", "dec": false, "canon": "Gains and losses - Gain/loss on sale of investment property", "simple": "Gains And Losses - Gain/Loss On Sale Of Investment Property", "simpleSrc": "list", "notes": "LLP/LTD only. ST/PT equivalents (where any) are the per-asset 'Profit/loss on disposal' lines."}, {"n": 82, "sec": "Gains and losses", "concept": "Gain/loss due to foreign exchange differences", "cls": "Entity-specific", "ents": "LLP+LTD", "sp": [{"text": "Gains and losses - Gain/loss due to foreign exchange differences", "ents": ["LLP", "LTD"]}], "rec": "Gated", "dec": false, "canon": "Gains and losses - Gain/loss due to foreign exchange differences", "simple": "Gains And Losses - Gain/Loss Due To Foreign Exchange Differences", "simpleSrc": "list", "notes": "LLP/LTD only. ST/PT equivalents (where any) are the per-asset 'Profit/loss on disposal' lines."}, {"n": 83, "sec": "Gains and losses", "concept": "Gain/loss from changes in provisions", "cls": "Entity-specific", "ents": "LLP+LTD", "sp": [{"text": "Gains and losses - Gain/loss from changes in provisions", "ents": ["LLP", "LTD"]}], "rec": "Gated", "dec": false, "canon": "Gains and losses - Gain/loss from changes in provisions", "simple": "Gains And Losses - Gain/Loss From Changes In Provisions", "simpleSrc": "list", "notes": "LLP/LTD only. ST/PT equivalents (where any) are the per-asset 'Profit/loss on disposal' lines."}, {"n": 84, "sec": "Members' remuneration (LLP)", "concept": "Salaries paid under LLP agreement", "cls": "Entity-specific", "ents": "LLP", "sp": [{"text": "Members' remuneration - Salaries paid under LLP agreement", "ents": ["LLP"]}], "rec": "Gated", "dec": false, "canon": "Members' remuneration - Salaries paid under LLP agreement", "simple": "Members' Remuneration - Salaries Paid Under LLP Agreement", "simpleSrc": "list", "notes": "LLP only - profit appropriation."}, {"n": 85, "sec": "Members' remuneration (LLP)", "concept": "Retirement benefit costs", "cls": "Entity-specific", "ents": "LLP", "sp": [{"text": "Members' remuneration - Retirement benefit costs", "ents": ["LLP"]}], "rec": "Gated", "dec": false, "canon": "Members' remuneration - Retirement benefit costs", "simple": "Members' Remuneration - Retirement Benefit Costs", "simpleSrc": "list", "notes": "LLP only - profit appropriation."}, {"n": 86, "sec": "Members' remuneration (LLP)", "concept": "Interest payable on members' capital", "cls": "Entity-specific", "ents": "LLP", "sp": [{"text": "Members' remuneration - Interest payable on members' capital", "ents": ["LLP"]}], "rec": "Gated", "dec": false, "canon": "Members' remuneration - Interest payable on members' capital", "simple": "Members' Remuneration - Interest Payable On Members' Capital", "simpleSrc": "list", "notes": "LLP only - profit appropriation."}, {"n": 87, "sec": "Members' remuneration (LLP)", "concept": "Automatic division of profits", "cls": "Entity-specific", "ents": "LLP", "sp": [{"text": "Members' remuneration - Automatic division of profits", "ents": ["LLP"]}], "rec": "Gated", "dec": false, "canon": "Members' remuneration - Automatic division of profits", "simple": "Members' Remuneration - Automatic Division Of Profits", "simpleSrc": "list", "notes": "LLP only - profit appropriation."}, {"n": 88, "sec": "Taxation (LTD)", "concept": "Corporation tax", "cls": "Entity-specific", "ents": "LTD", "sp": [{"text": "Taxation - Corporation tax", "ents": ["LTD"]}], "rec": "Gated", "dec": false, "canon": "Taxation - Corporation tax", "simple": "Taxation - Corporation Tax", "simpleSrc": "list", "notes": "LTD only - corporation tax charge feeds retained earnings."}, {"n": 89, "sec": "Taxation (LTD)", "concept": "Corporation tax - prior year adjustments", "cls": "Entity-specific", "ents": "LTD", "sp": [{"text": "Taxation - Corporation tax - prior year adjustments", "ents": ["LTD"]}], "rec": "Gated", "dec": false, "canon": "Taxation - Corporation tax - prior year adjustments", "simple": "Taxation - Corporation Tax - Prior Year Adjustments", "simpleSrc": "list", "notes": "LTD only - corporation tax charge feeds retained earnings."}, {"n": 90, "sec": "Taxation (LTD)", "concept": "Deferred tax", "cls": "Entity-specific", "ents": "LTD", "sp": [{"text": "Taxation - Deferred tax", "ents": ["LTD"]}], "rec": "Gated", "dec": false, "canon": "Taxation - Deferred tax", "simple": "Taxation - Deferred Tax", "simpleSrc": "list", "notes": "LTD only - corporation tax charge feeds retained earnings."}, {"n": 91, "sec": "Intangible fixed assets", "concept": "Goodwill - Cost - b/fwd", "cls": "Common core", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Intangible Fixed Assets - Goodwill - Cost - b/fwd", "ents": ["ST", "PT", "LLP", "LTD"]}], "rec": "Shared", "dec": false, "canon": "Intangible Fixed Assets - Goodwill - Cost - b/fwd", "simple": "Intangible Fixed Assets - Goodwill - Cost - B/Fwd", "simpleSrc": "list", "notes": ""}, {"n": 92, "sec": "Intangible fixed assets", "concept": "Goodwill - Cost - additions", "cls": "Common core", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Intangible Fixed Assets - Goodwill - Cost - additions", "ents": ["ST", "PT", "LLP", "LTD"]}], "rec": "Shared", "dec": false, "canon": "Intangible Fixed Assets - Goodwill - Cost - additions", "simple": "Intangible Fixed Assets - Goodwill - Cost - Additions", "simpleSrc": "list", "notes": ""}, {"n": 93, "sec": "Intangible fixed assets", "concept": "Goodwill - Cost - disposals", "cls": "Common core", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Intangible Fixed Assets - Goodwill - Cost - disposals", "ents": ["ST", "PT", "LLP", "LTD"]}], "rec": "Shared", "dec": false, "canon": "Intangible Fixed Assets - Goodwill - Cost - disposals", "simple": "Intangible Fixed Assets - Goodwill - Cost - Disposals", "simpleSrc": "list", "notes": ""}, {"n": 94, "sec": "Intangible fixed assets", "concept": "Goodwill - Cost - revaluations", "cls": "Common core", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Intangible Fixed Assets - Goodwill - Cost - revaluations", "ents": ["ST", "PT", "LLP", "LTD"]}], "rec": "Shared", "dec": false, "canon": "Intangible Fixed Assets - Goodwill - Cost - revaluations", "simple": "Intangible Fixed Assets - Goodwill - Cost - Revaluations", "simpleSrc": "list", "notes": ""}, {"n": 95, "sec": "Intangible fixed assets", "concept": "Goodwill - Amortisation - b/fwd", "cls": "Common core", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Intangible Fixed Assets - Goodwill - Amortisation - b/fwd", "ents": ["ST", "PT", "LLP", "LTD"]}], "rec": "Shared", "dec": false, "canon": "Intangible Fixed Assets - Goodwill - Amortisation - b/fwd", "simple": "Intangible Fixed Assets - Goodwill - Amortisation - B/Fwd", "simpleSrc": "list", "notes": ""}, {"n": 96, "sec": "Intangible fixed assets", "concept": "Goodwill - Amortisation - provided in year", "cls": "Common core", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Intangible Fixed Assets - Goodwill - Amortisation - provided in year", "ents": ["ST", "PT", "LLP", "LTD"]}], "rec": "Shared", "dec": false, "canon": "Intangible Fixed Assets - Goodwill - Amortisation - provided in year", "simple": "Intangible Fixed Assets - Goodwill - Amortisation - Provided In Year", "simpleSrc": "list", "notes": ""}, {"n": 97, "sec": "Intangible fixed assets", "concept": "Goodwill - Amortisation - disposals", "cls": "Common core", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Intangible Fixed Assets - Goodwill - Amortisation - disposals", "ents": ["ST", "PT", "LLP", "LTD"]}], "rec": "Shared", "dec": false, "canon": "Intangible Fixed Assets - Goodwill - Amortisation - disposals", "simple": "Intangible Fixed Assets - Goodwill - Amortisation - Disposals", "simpleSrc": "list", "notes": ""}, {"n": 98, "sec": "Intangible fixed assets", "concept": "Goodwill - Amortisation - other increase/(decrease)", "cls": "Common core", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Intangible Fixed Assets - Goodwill - Amortisation - other increase/(decrease)", "ents": ["ST", "PT", "LLP", "LTD"]}], "rec": "Shared", "dec": false, "canon": "Intangible Fixed Assets - Goodwill - Amortisation - other increase/(decrease)", "simple": "Intangible Fixed Assets - Goodwill - Amortisation - Other Increase/(Decrease)", "simpleSrc": "list", "notes": ""}, {"n": 99, "sec": "Intangible fixed assets", "concept": "Other - Cost - b/fwd", "cls": "Common core", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Intangible Fixed Assets - Other - Cost - b/fwd", "ents": ["ST", "PT", "LLP", "LTD"]}], "rec": "Shared", "dec": false, "canon": "Intangible Fixed Assets - Other - Cost - b/fwd", "simple": "Intangible Fixed Assets - Other - Cost - B/Fwd", "simpleSrc": "list", "notes": ""}, {"n": 100, "sec": "Intangible fixed assets", "concept": "Other - Cost - additions", "cls": "Common core", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Intangible Fixed Assets - Other - Cost - additions", "ents": ["ST", "PT", "LLP", "LTD"]}], "rec": "Shared", "dec": false, "canon": "Intangible Fixed Assets - Other - Cost - additions", "simple": "Intangible Fixed Assets - Other - Cost - Additions", "simpleSrc": "list", "notes": ""}, {"n": 101, "sec": "Intangible fixed assets", "concept": "Other - Cost - disposals", "cls": "Common core", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Intangible Fixed Assets - Other - Cost - disposals", "ents": ["ST", "PT", "LLP", "LTD"]}], "rec": "Shared", "dec": false, "canon": "Intangible Fixed Assets - Other - Cost - disposals", "simple": "Intangible Fixed Assets - Other - Cost - Disposals", "simpleSrc": "list", "notes": ""}, {"n": 102, "sec": "Intangible fixed assets", "concept": "Other - Cost - revaluations", "cls": "Common core", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Intangible Fixed Assets - Other - Cost - revaluations", "ents": ["ST", "PT", "LLP", "LTD"]}], "rec": "Shared", "dec": false, "canon": "Intangible Fixed Assets - Other - Cost - revaluations", "simple": "Intangible Fixed Assets - Other - Cost - Revaluations", "simpleSrc": "list", "notes": ""}, {"n": 103, "sec": "Intangible fixed assets", "concept": "Other - Amortisation - b/fwd", "cls": "Common core", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Intangible Fixed Assets - Other - Amortisation - b/fwd", "ents": ["ST", "PT", "LLP", "LTD"]}], "rec": "Shared", "dec": false, "canon": "Intangible Fixed Assets - Other - Amortisation - b/fwd", "simple": "Intangible Fixed Assets - Other - Amortisation - B/Fwd", "simpleSrc": "list", "notes": ""}, {"n": 104, "sec": "Intangible fixed assets", "concept": "Other - Amortisation - provided in year", "cls": "Common core", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Intangible Fixed Assets - Other - Amortisation - provided in year", "ents": ["ST", "PT", "LLP", "LTD"]}], "rec": "Shared", "dec": false, "canon": "Intangible Fixed Assets - Other - Amortisation - provided in year", "simple": "Intangible Fixed Assets - Other - Amortisation - Provided In Year", "simpleSrc": "list", "notes": ""}, {"n": 105, "sec": "Intangible fixed assets", "concept": "Other - Amortisation - disposals", "cls": "Common core", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Intangible Fixed Assets - Other - Amortisation - disposals", "ents": ["ST", "PT", "LLP", "LTD"]}], "rec": "Shared", "dec": false, "canon": "Intangible Fixed Assets - Other - Amortisation - disposals", "simple": "Intangible Fixed Assets - Other - Amortisation - Disposals", "simpleSrc": "list", "notes": ""}, {"n": 106, "sec": "Intangible fixed assets", "concept": "Other - Amortisation - other increase/(decrease)", "cls": "Common core", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Intangible Fixed Assets - Other - Amortisation - other increase/(decrease)", "ents": ["ST", "PT", "LLP", "LTD"]}], "rec": "Shared", "dec": false, "canon": "Intangible Fixed Assets - Other - Amortisation - other increase/(decrease)", "simple": "Intangible Fixed Assets - Other - Amortisation - Other Increase/(Decrease)", "simpleSrc": "list", "notes": ""}, {"n": 107, "sec": "Tangible fixed assets", "concept": "Land & buildings - Cost - b/fwd", "cls": "Common core", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Land & buildings - Cost - b/fwd", "ents": ["ST", "PT", "LLP", "LTD"]}], "rec": "Shared", "dec": false, "canon": "Land & buildings - Cost - b/fwd", "simple": "Land & Buildings - Cost - B/Fwd", "simpleSrc": "list", "notes": ""}, {"n": 108, "sec": "Tangible fixed assets", "concept": "Land & buildings - Cost - additions", "cls": "Common core", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Land & buildings - Cost - additions", "ents": ["ST", "PT", "LLP", "LTD"]}], "rec": "Shared", "dec": false, "canon": "Land & buildings - Cost - additions", "simple": "Land & Buildings - Cost - Additions", "simpleSrc": "list", "notes": ""}, {"n": 109, "sec": "Tangible fixed assets", "concept": "Land & buildings - Cost - revaluation", "cls": "Common core", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Land & buildings - Cost - revaluation", "ents": ["ST", "PT", "LLP", "LTD"]}], "rec": "Shared", "dec": false, "canon": "Land & buildings - Cost - revaluation", "simple": "Land & Buildings - Cost - Revaluation", "simpleSrc": "list", "notes": ""}, {"n": 110, "sec": "Tangible fixed assets", "concept": "Land & buildings - Cost - disposals", "cls": "Common core", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Land & buildings - Cost - disposals", "ents": ["ST", "PT", "LLP", "LTD"]}], "rec": "Shared", "dec": false, "canon": "Land & buildings - Cost - disposals", "simple": "Land & Buildings - Cost - Disposals", "simpleSrc": "list", "notes": ""}, {"n": 111, "sec": "Tangible fixed assets", "concept": "Land & buildings - Depn - b/fwd", "cls": "Common core", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Land & buildings - Depn - b/fwd", "ents": ["ST", "PT", "LLP", "LTD"]}], "rec": "Shared", "dec": false, "canon": "Land & buildings - Depn - b/fwd", "simple": "Land & Buildings - Depn - B/Fwd", "simpleSrc": "list", "notes": ""}, {"n": 112, "sec": "Tangible fixed assets", "concept": "Land & buildings - Depn - charge for the year", "cls": "Common core", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Land & buildings - Depn - charge for the year", "ents": ["ST", "PT", "LLP", "LTD"]}], "rec": "Shared", "dec": false, "canon": "Land & buildings - Depn - charge for the year", "simple": "Land & Buildings - Depn - Charge For The Year", "simpleSrc": "list", "notes": ""}, {"n": 113, "sec": "Tangible fixed assets", "concept": "Land & buildings - Depn - revaluation", "cls": "Common core", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Land & buildings - Depn - revaluation", "ents": ["ST", "PT", "LLP", "LTD"]}], "rec": "Shared", "dec": false, "canon": "Land & buildings - Depn - revaluation", "simple": "Land & Buildings - Depn - Revaluation", "simpleSrc": "list", "notes": ""}, {"n": 114, "sec": "Tangible fixed assets", "concept": "Land & buildings - Depn - disposals", "cls": "Common core", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Land & buildings - Depn - disposals", "ents": ["ST", "PT", "LLP", "LTD"]}], "rec": "Shared", "dec": false, "canon": "Land & buildings - Depn - disposals", "simple": "Land & Buildings - Depn - Disposals", "simpleSrc": "list", "notes": ""}, {"n": 115, "sec": "Tangible fixed assets", "concept": "Land & buildings - Cost - transfer to/from investment property", "cls": "Entity-specific", "ents": "LLP+LTD", "sp": [{"text": "Land & buildings - Cost - transfer to/from investment property", "ents": ["LLP", "LTD"]}], "rec": "Gated", "dec": false, "canon": "Land & buildings - Cost - transfer to/from investment property", "simple": "Land & Buildings - Cost - Transfer To/From Investment Property", "simpleSrc": "list", "notes": "LLP/LTD only."}, {"n": 116, "sec": "Tangible fixed assets", "concept": "Land & buildings - Depn - transfer to/from investment property", "cls": "Entity-specific", "ents": "LLP+LTD", "sp": [{"text": "Land & buildings - Depn - transfer to/from investment property", "ents": ["LLP", "LTD"]}], "rec": "Gated", "dec": false, "canon": "Land & buildings - Depn - transfer to/from investment property", "simple": "Land & Buildings - Depn - Transfer To/From Investment Property", "simpleSrc": "list", "notes": "LLP/LTD only."}, {"n": 117, "sec": "Tangible fixed assets", "concept": "Plant & machinery - Cost - b/fwd", "cls": "Common core", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Plant & machinery - Cost - b/fwd", "ents": ["ST", "PT", "LLP", "LTD"]}], "rec": "Shared", "dec": false, "canon": "Plant & machinery - Cost - b/fwd", "simple": "Plant & Machinery - Cost - B/Fwd", "simpleSrc": "list", "notes": ""}, {"n": 118, "sec": "Tangible fixed assets", "concept": "Plant & machinery - Cost - additions", "cls": "Common core", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Plant & machinery - Cost - additions", "ents": ["ST", "PT", "LLP", "LTD"]}], "rec": "Shared", "dec": false, "canon": "Plant & machinery - Cost - additions", "simple": "Plant & Machinery - Cost - Additions", "simpleSrc": "list", "notes": ""}, {"n": 119, "sec": "Tangible fixed assets", "concept": "Plant & machinery - Cost - revaluation", "cls": "Common core", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Plant & machinery - Cost - revaluation", "ents": ["ST", "PT", "LLP", "LTD"]}], "rec": "Shared", "dec": false, "canon": "Plant & machinery - Cost - revaluation", "simple": "Plant & Machinery - Cost - Revaluation", "simpleSrc": "list", "notes": ""}, {"n": 120, "sec": "Tangible fixed assets", "concept": "Plant & machinery - Cost - disposals", "cls": "Common core", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Plant & machinery - Cost - disposals", "ents": ["ST", "PT", "LLP", "LTD"]}], "rec": "Shared", "dec": false, "canon": "Plant & machinery - Cost - disposals", "simple": "Plant & Machinery - Cost - Disposals", "simpleSrc": "list", "notes": ""}, {"n": 121, "sec": "Tangible fixed assets", "concept": "Plant & machinery - Depn - b/fwd", "cls": "Common core", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Plant & machinery - Depn - b/fwd", "ents": ["ST", "PT", "LLP", "LTD"]}], "rec": "Shared", "dec": false, "canon": "Plant & machinery - Depn - b/fwd", "simple": "Plant & Machinery - Depn - B/Fwd", "simpleSrc": "list", "notes": ""}, {"n": 122, "sec": "Tangible fixed assets", "concept": "Plant & machinery - Depn - charge for the year", "cls": "Common core", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Plant & machinery - Depn - charge for the year", "ents": ["ST", "PT", "LLP", "LTD"]}], "rec": "Shared", "dec": false, "canon": "Plant & machinery - Depn - charge for the year", "simple": "Plant & Machinery - Depn - Charge For The Year", "simpleSrc": "list", "notes": ""}, {"n": 123, "sec": "Tangible fixed assets", "concept": "Plant & machinery - Depn - revaluation", "cls": "Common core", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Plant & machinery - Depn - revaluation", "ents": ["ST", "PT", "LLP", "LTD"]}], "rec": "Shared", "dec": false, "canon": "Plant & machinery - Depn - revaluation", "simple": "Plant & Machinery - Depn - Revaluation", "simpleSrc": "list", "notes": ""}, {"n": 124, "sec": "Tangible fixed assets", "concept": "Plant & machinery - Depn - disposals", "cls": "Common core", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Plant & machinery - Depn - disposals", "ents": ["ST", "PT", "LLP", "LTD"]}], "rec": "Shared", "dec": false, "canon": "Plant & machinery - Depn - disposals", "simple": "Plant & Machinery - Depn - Disposals", "simpleSrc": "list", "notes": ""}, {"n": 125, "sec": "Tangible fixed assets", "concept": "Motor vehicles - Cost - b/fwd", "cls": "Common core", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Motor vehicles - Cost - b/fwd", "ents": ["ST", "PT", "LLP", "LTD"]}], "rec": "Shared", "dec": false, "canon": "Motor vehicles - Cost - b/fwd", "simple": "Motor Vehicles - Cost - B/Fwd", "simpleSrc": "list", "notes": ""}, {"n": 126, "sec": "Tangible fixed assets", "concept": "Motor vehicles - Cost - additions", "cls": "Common core", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Motor vehicles - Cost - additions", "ents": ["ST", "PT", "LLP", "LTD"]}], "rec": "Shared", "dec": false, "canon": "Motor vehicles - Cost - additions", "simple": "Motor Vehicles - Cost - Additions", "simpleSrc": "list", "notes": ""}, {"n": 127, "sec": "Tangible fixed assets", "concept": "Motor vehicles - Cost - revaluation", "cls": "Common core", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Motor vehicles - Cost - revaluation", "ents": ["ST", "PT", "LLP", "LTD"]}], "rec": "Shared", "dec": false, "canon": "Motor vehicles - Cost - revaluation", "simple": "Motor Vehicles - Cost - Revaluation", "simpleSrc": "list", "notes": ""}, {"n": 128, "sec": "Tangible fixed assets", "concept": "Motor vehicles - Cost - disposals", "cls": "Common core", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Motor vehicles - Cost - disposals", "ents": ["ST", "PT", "LLP", "LTD"]}], "rec": "Shared", "dec": false, "canon": "Motor vehicles - Cost - disposals", "simple": "Motor Vehicles - Cost - Disposals", "simpleSrc": "list", "notes": ""}, {"n": 129, "sec": "Tangible fixed assets", "concept": "Motor vehicles - Depn - b/fwd", "cls": "Common core", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Motor vehicles - Depn - b/fwd", "ents": ["ST", "PT", "LLP", "LTD"]}], "rec": "Shared", "dec": false, "canon": "Motor vehicles - Depn - b/fwd", "simple": "Motor Vehicles - Depn - B/Fwd", "simpleSrc": "list", "notes": ""}, {"n": 130, "sec": "Tangible fixed assets", "concept": "Motor vehicles - Depn - charge for the year", "cls": "Common core", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Motor vehicles - Depn - charge for the year", "ents": ["ST", "PT", "LLP", "LTD"]}], "rec": "Shared", "dec": false, "canon": "Motor vehicles - Depn - charge for the year", "simple": "Motor Vehicles - Depn - Charge For The Year", "simpleSrc": "list", "notes": ""}, {"n": 131, "sec": "Tangible fixed assets", "concept": "Motor vehicles - Depn - revaluation", "cls": "Common core", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Motor vehicles - Depn - revaluation", "ents": ["ST", "PT", "LLP", "LTD"]}], "rec": "Shared", "dec": false, "canon": "Motor vehicles - Depn - revaluation", "simple": "Motor Vehicles - Depn - Revaluation", "simpleSrc": "list", "notes": ""}, {"n": 132, "sec": "Tangible fixed assets", "concept": "Motor vehicles - Depn - disposals", "cls": "Common core", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Motor vehicles - Depn - disposals", "ents": ["ST", "PT", "LLP", "LTD"]}], "rec": "Shared", "dec": false, "canon": "Motor vehicles - Depn - disposals", "simple": "Motor Vehicles - Depn - Disposals", "simpleSrc": "list", "notes": ""}, {"n": 133, "sec": "Tangible fixed assets", "concept": "Fixtures & fittings - Cost - b/fwd", "cls": "Common core", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Fixtures & fittings - Cost - b/fwd", "ents": ["ST", "PT", "LLP", "LTD"]}], "rec": "Shared", "dec": false, "canon": "Fixtures & fittings - Cost - b/fwd", "simple": "Fixtures & Fittings - Cost - B/Fwd", "simpleSrc": "list", "notes": ""}, {"n": 134, "sec": "Tangible fixed assets", "concept": "Fixtures & fittings - Cost - additions", "cls": "Common core", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Fixtures & fittings - Cost - additions", "ents": ["ST", "PT", "LLP", "LTD"]}], "rec": "Shared", "dec": false, "canon": "Fixtures & fittings - Cost - additions", "simple": "Fixtures & Fittings - Cost - Additions", "simpleSrc": "list", "notes": ""}, {"n": 135, "sec": "Tangible fixed assets", "concept": "Fixtures & fittings - Cost - revaluation", "cls": "Common core", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Fixtures & fittings - Cost - revaluation", "ents": ["ST", "PT", "LLP", "LTD"]}], "rec": "Shared", "dec": false, "canon": "Fixtures & fittings - Cost - revaluation", "simple": "Fixtures & Fittings - Cost - Revaluation", "simpleSrc": "list", "notes": ""}, {"n": 136, "sec": "Tangible fixed assets", "concept": "Fixtures & fittings - Cost - disposals", "cls": "Common core", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Fixtures & fittings - Cost - disposals", "ents": ["ST", "PT", "LLP", "LTD"]}], "rec": "Shared", "dec": false, "canon": "Fixtures & fittings - Cost - disposals", "simple": "Fixtures & Fittings - Cost - Disposals", "simpleSrc": "list", "notes": ""}, {"n": 137, "sec": "Tangible fixed assets", "concept": "Fixtures & fittings - Depn - b/fwd", "cls": "Common core", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Fixtures & fittings - Depn - b/fwd", "ents": ["ST", "PT", "LLP", "LTD"]}], "rec": "Shared", "dec": false, "canon": "Fixtures & fittings - Depn - b/fwd", "simple": "Fixtures & Fittings - Depn - B/Fwd", "simpleSrc": "list", "notes": ""}, {"n": 138, "sec": "Tangible fixed assets", "concept": "Fixtures & fittings - Depn - charge for the year", "cls": "Common core", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Fixtures & fittings - Depn - charge for the year", "ents": ["ST", "PT", "LLP", "LTD"]}], "rec": "Shared", "dec": false, "canon": "Fixtures & fittings - Depn - charge for the year", "simple": "Fixtures & Fittings - Depn - Charge For The Year", "simpleSrc": "list", "notes": ""}, {"n": 139, "sec": "Tangible fixed assets", "concept": "Fixtures & fittings - Depn - revaluation", "cls": "Common core", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Fixtures & fittings - Depn - revaluation", "ents": ["ST", "PT", "LLP", "LTD"]}], "rec": "Shared", "dec": false, "canon": "Fixtures & fittings - Depn - revaluation", "simple": "Fixtures & Fittings - Depn - Revaluation", "simpleSrc": "list", "notes": ""}, {"n": 140, "sec": "Tangible fixed assets", "concept": "Fixtures & fittings - Depn - disposals", "cls": "Common core", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Fixtures & fittings - Depn - disposals", "ents": ["ST", "PT", "LLP", "LTD"]}], "rec": "Shared", "dec": false, "canon": "Fixtures & fittings - Depn - disposals", "simple": "Fixtures & Fittings - Depn - Disposals", "simpleSrc": "list", "notes": ""}, {"n": 141, "sec": "Tangible fixed assets", "concept": "Computer equipment - Cost - b/fwd", "cls": "Common core", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Computer equipment - Cost - b/fwd", "ents": ["ST", "PT", "LLP", "LTD"]}], "rec": "Shared", "dec": false, "canon": "Computer equipment - Cost - b/fwd", "simple": "Computer Equipment - Cost - B/Fwd", "simpleSrc": "list", "notes": ""}, {"n": 142, "sec": "Tangible fixed assets", "concept": "Computer equipment - Cost - additions", "cls": "Common core", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Computer equipment - Cost - additions", "ents": ["ST", "PT", "LLP", "LTD"]}], "rec": "Shared", "dec": false, "canon": "Computer equipment - Cost - additions", "simple": "Computer Equipment - Cost - Additions", "simpleSrc": "list", "notes": ""}, {"n": 143, "sec": "Tangible fixed assets", "concept": "Computer equipment - Cost - revaluation", "cls": "Common core", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Computer equipment - Cost - revaluation", "ents": ["ST", "PT", "LLP", "LTD"]}], "rec": "Shared", "dec": false, "canon": "Computer equipment - Cost - revaluation", "simple": "Computer Equipment - Cost - Revaluation", "simpleSrc": "list", "notes": ""}, {"n": 144, "sec": "Tangible fixed assets", "concept": "Computer equipment - Cost - disposals", "cls": "Common core", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Computer equipment - Cost - disposals", "ents": ["ST", "PT", "LLP", "LTD"]}], "rec": "Shared", "dec": false, "canon": "Computer equipment - Cost - disposals", "simple": "Computer Equipment - Cost - Disposals", "simpleSrc": "list", "notes": ""}, {"n": 145, "sec": "Tangible fixed assets", "concept": "Computer equipment - Depn - b/fwd", "cls": "Common core", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Computer equipment - Depn - b/fwd", "ents": ["ST", "PT", "LLP", "LTD"]}], "rec": "Shared", "dec": false, "canon": "Computer equipment - Depn - b/fwd", "simple": "Computer Equipment - Depn - B/Fwd", "simpleSrc": "list", "notes": ""}, {"n": 146, "sec": "Tangible fixed assets", "concept": "Computer equipment - Depn - charge for the year", "cls": "Common core", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Computer equipment - Depn - charge for the year", "ents": ["ST", "PT", "LLP", "LTD"]}], "rec": "Shared", "dec": false, "canon": "Computer equipment - Depn - charge for the year", "simple": "Computer Equipment - Depn - Charge For The Year", "simpleSrc": "list", "notes": ""}, {"n": 147, "sec": "Tangible fixed assets", "concept": "Computer equipment - Depn - revaluation", "cls": "Common core", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Computer equipment - Depn - revaluation", "ents": ["ST", "PT", "LLP", "LTD"]}], "rec": "Shared", "dec": false, "canon": "Computer equipment - Depn - revaluation", "simple": "Computer Equipment - Depn - Revaluation", "simpleSrc": "list", "notes": ""}, {"n": 148, "sec": "Tangible fixed assets", "concept": "Computer equipment - Depn - disposals", "cls": "Common core", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Computer equipment - Depn - disposals", "ents": ["ST", "PT", "LLP", "LTD"]}], "rec": "Shared", "dec": false, "canon": "Computer equipment - Depn - disposals", "simple": "Computer Equipment - Depn - Disposals", "simpleSrc": "list", "notes": ""}, {"n": 149, "sec": "Fixed asset investments", "concept": "Investments (ST/PT) - b/fwd", "cls": "Entity-specific", "ents": "ST+PT", "sp": [{"text": "Other fixed assets - Investments - b/fwd", "ents": ["ST", "PT"]}], "rec": "Gated", "dec": false, "canon": "Other fixed assets - Investments - b/fwd", "simple": "Other Fixed Assets - Investments - B/Fwd", "simpleSrc": "list", "notes": "ST/PT only - single simple investments block; LLP/LTD use the granular investment blocks below (not a 1:1 spelling match, kept separate)."}, {"n": 150, "sec": "Fixed asset investments", "concept": "Investments (ST/PT) - additions", "cls": "Entity-specific", "ents": "ST+PT", "sp": [{"text": "Other fixed assets - Investments - additions", "ents": ["ST", "PT"]}], "rec": "Gated", "dec": false, "canon": "Other fixed assets - Investments - additions", "simple": "Other Fixed Assets - Investments - Additions", "simpleSrc": "list", "notes": "ST/PT only - single simple investments block; LLP/LTD use the granular investment blocks below (not a 1:1 spelling match, kept separate)."}, {"n": 151, "sec": "Fixed asset investments", "concept": "Investments (ST/PT) - disposals", "cls": "Entity-specific", "ents": "ST+PT", "sp": [{"text": "Other fixed assets - Investments - disposals", "ents": ["ST", "PT"]}], "rec": "Gated", "dec": false, "canon": "Other fixed assets - Investments - disposals", "simple": "Other Fixed Assets - Investments - Disposals", "simpleSrc": "list", "notes": "ST/PT only - single simple investments block; LLP/LTD use the granular investment blocks below (not a 1:1 spelling match, kept separate)."}, {"n": 152, "sec": "Fixed asset investments", "concept": "Investment properties - B/fwd", "cls": "Entity-specific", "ents": "LLP+LTD", "sp": [{"text": "Investment properties - B/fwd", "ents": ["LLP", "LTD"]}], "rec": "Gated", "dec": false, "canon": "Investment properties - B/fwd", "simple": "Investment Properties - B/Fwd", "simpleSrc": "list", "notes": "LLP/LTD only."}, {"n": 153, "sec": "Fixed asset investments", "concept": "Investment properties - Additions", "cls": "Entity-specific", "ents": "LLP+LTD", "sp": [{"text": "Investment properties - Additions", "ents": ["LLP", "LTD"]}], "rec": "Gated", "dec": false, "canon": "Investment properties - Additions", "simple": "Investment Properties - Additions", "simpleSrc": "list", "notes": "LLP/LTD only."}, {"n": 154, "sec": "Fixed asset investments", "concept": "Investment properties - Disposals", "cls": "Entity-specific", "ents": "LLP+LTD", "sp": [{"text": "Investment properties - Disposals", "ents": ["LLP", "LTD"]}], "rec": "Gated", "dec": false, "canon": "Investment properties - Disposals", "simple": "Investment Properties - Disposals", "simpleSrc": "list", "notes": "LLP/LTD only."}, {"n": 155, "sec": "Fixed asset investments", "concept": "Investment properties - Transfer to/from tangible fixed assets", "cls": "Entity-specific", "ents": "LLP+LTD", "sp": [{"text": "Investment properties - Transfer to/from tangible fixed assets", "ents": ["LLP", "LTD"]}], "rec": "Gated", "dec": false, "canon": "Investment properties - Transfer to/from tangible fixed assets", "simple": "Investment Properties - Transfer To/From Tangible Fixed Assets", "simpleSrc": "list", "notes": "LLP/LTD only."}, {"n": 156, "sec": "Fixed asset investments", "concept": "Investment properties - Revaluation", "cls": "Entity-specific", "ents": "LLP+LTD", "sp": [{"text": "Investment properties - Revaluation", "ents": ["LLP", "LTD"]}], "rec": "Gated", "dec": false, "canon": "Investment properties - Revaluation", "simple": "Investment Properties - Revaluation", "simpleSrc": "list", "notes": "LLP/LTD only."}, {"n": 157, "sec": "Fixed asset investments", "concept": "Investments in subsidiaries - B/fwd", "cls": "Entity-specific", "ents": "LLP+LTD", "sp": [{"text": "Investments in subsidiaries - B/fwd", "ents": ["LLP", "LTD"]}], "rec": "Gated", "dec": false, "canon": "Investments in subsidiaries - B/fwd", "simple": "Investments In Subsidiaries - B/Fwd", "simpleSrc": "list", "notes": "LLP/LTD only."}, {"n": 158, "sec": "Fixed asset investments", "concept": "Investments in subsidiaries - Additions", "cls": "Entity-specific", "ents": "LLP+LTD", "sp": [{"text": "Investments in subsidiaries - Additions", "ents": ["LLP", "LTD"]}], "rec": "Gated", "dec": false, "canon": "Investments in subsidiaries - Additions", "simple": "Investments In Subsidiaries - Additions", "simpleSrc": "list", "notes": "LLP/LTD only."}, {"n": 159, "sec": "Fixed asset investments", "concept": "Investments in subsidiaries - Disposals", "cls": "Entity-specific", "ents": "LLP+LTD", "sp": [{"text": "Investments in subsidiaries - Disposals", "ents": ["LLP", "LTD"]}], "rec": "Gated", "dec": false, "canon": "Investments in subsidiaries - Disposals", "simple": "Investments In Subsidiaries - Disposals", "simpleSrc": "list", "notes": "LLP/LTD only."}, {"n": 160, "sec": "Fixed asset investments", "concept": "Investments in subsidiaries - Revaluation", "cls": "Entity-specific", "ents": "LLP+LTD", "sp": [{"text": "Investments in subsidiaries - Revaluation", "ents": ["LLP", "LTD"]}], "rec": "Gated", "dec": false, "canon": "Investments in subsidiaries - Revaluation", "simple": "Investments In Subsidiaries - Revaluation", "simpleSrc": "list", "notes": "LLP/LTD only."}, {"n": 161, "sec": "Fixed asset investments", "concept": "Other investments - listed - B/fwd", "cls": "Entity-specific", "ents": "LLP+LTD", "sp": [{"text": "Other investments - listed - B/fwd", "ents": ["LLP", "LTD"]}], "rec": "Gated", "dec": false, "canon": "Other investments - listed - B/fwd", "simple": "Other Investments - Listed - B/Fwd", "simpleSrc": "list", "notes": "LLP/LTD only."}, {"n": 162, "sec": "Fixed asset investments", "concept": "Other investments - listed - Additions", "cls": "Entity-specific", "ents": "LLP+LTD", "sp": [{"text": "Other investments - listed - Additions", "ents": ["LLP", "LTD"]}], "rec": "Gated", "dec": false, "canon": "Other investments - listed - Additions", "simple": "Other Investments - Listed - Additions", "simpleSrc": "list", "notes": "LLP/LTD only."}, {"n": 163, "sec": "Fixed asset investments", "concept": "Other investments - listed - Disposals", "cls": "Entity-specific", "ents": "LLP+LTD", "sp": [{"text": "Other investments - listed - Disposals", "ents": ["LLP", "LTD"]}], "rec": "Gated", "dec": false, "canon": "Other investments - listed - Disposals", "simple": "Other Investments - Listed - Disposals", "simpleSrc": "list", "notes": "LLP/LTD only."}, {"n": 164, "sec": "Fixed asset investments", "concept": "Other investments - listed - Revaluation", "cls": "Entity-specific", "ents": "LLP+LTD", "sp": [{"text": "Other investments - listed - Revaluation", "ents": ["LLP", "LTD"]}], "rec": "Gated", "dec": false, "canon": "Other investments - listed - Revaluation", "simple": "Other Investments - Listed - Revaluation", "simpleSrc": "list", "notes": "LLP/LTD only."}, {"n": 165, "sec": "Fixed asset investments", "concept": "Other investments - unlisted - B/fwd", "cls": "Entity-specific", "ents": "LLP+LTD", "sp": [{"text": "Other investments - unlisted - B/fwd", "ents": ["LLP", "LTD"]}], "rec": "Gated", "dec": false, "canon": "Other investments - unlisted - B/fwd", "simple": "Other Investments - Unlisted - B/Fwd", "simpleSrc": "list", "notes": "LLP/LTD only."}, {"n": 166, "sec": "Fixed asset investments", "concept": "Other investments - unlisted - Additions", "cls": "Entity-specific", "ents": "LLP+LTD", "sp": [{"text": "Other investments - unlisted - Additions", "ents": ["LLP", "LTD"]}], "rec": "Gated", "dec": false, "canon": "Other investments - unlisted - Additions", "simple": "Other Investments - Unlisted - Additions", "simpleSrc": "list", "notes": "LLP/LTD only."}, {"n": 167, "sec": "Fixed asset investments", "concept": "Other investments - unlisted - Disposals", "cls": "Entity-specific", "ents": "LLP+LTD", "sp": [{"text": "Other investments - unlisted - Disposals", "ents": ["LLP", "LTD"]}], "rec": "Gated", "dec": false, "canon": "Other investments - unlisted - Disposals", "simple": "Other Investments - Unlisted - Disposals", "simpleSrc": "list", "notes": "LLP/LTD only."}, {"n": 168, "sec": "Fixed asset investments", "concept": "Other investments - unlisted - Revaluation", "cls": "Entity-specific", "ents": "LLP+LTD", "sp": [{"text": "Other investments - unlisted - Revaluation", "ents": ["LLP", "LTD"]}], "rec": "Gated", "dec": false, "canon": "Other investments - unlisted - Revaluation", "simple": "Other Investments - Unlisted - Revaluation", "simpleSrc": "list", "notes": "LLP/LTD only."}, {"n": 169, "sec": "Stocks & WIP", "concept": "Stocks (ST/PT single line)", "cls": "Entity-specific", "ents": "ST+PT", "sp": [{"text": "Current Assets - Stocks", "ents": ["ST", "PT"]}], "rec": "Gated", "dec": false, "canon": "Current Assets - Stocks", "simple": "Stocks", "simpleSrc": "strip", "notes": "ST/PT single stocks line; LLP/LTD split into raw materials / WIP / finished goods (below). Not a spelling variant - kept separate."}, {"n": 170, "sec": "Stocks & WIP", "concept": "Raw materials and consumables", "cls": "Entity-specific", "ents": "LLP+LTD", "sp": [{"text": "Stocks - Raw materials and consumables", "ents": ["LLP", "LTD"]}], "rec": "Gated", "dec": false, "canon": "Stocks - Raw materials and consumables", "simple": "Stocks - Raw Materials And Consumables", "simpleSrc": "list", "notes": "LLP/LTD only."}, {"n": 171, "sec": "Stocks & WIP", "concept": "Work in progress", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Current Assets - Work in progress", "ents": ["ST", "PT"]}, {"text": "Stocks - Work in progress", "ents": ["LLP", "LTD"]}], "rec": "Collapse", "dec": true, "canon": "Stocks - Work in progress", "simple": "Work In Progress", "simpleSrc": "list", "notes": "2 spellings: ST/PT 'Current Assets - ...', LLP/LTD 'Stocks - ...'."}, {"n": 172, "sec": "Stocks & WIP", "concept": "Finished goods", "cls": "Entity-specific", "ents": "LLP+LTD", "sp": [{"text": "Stocks - Finished goods", "ents": ["LLP", "LTD"]}], "rec": "Gated", "dec": false, "canon": "Stocks - Finished goods", "simple": "Stocks - Finished Goods", "simpleSrc": "list", "notes": "LLP/LTD only."}, {"n": 173, "sec": "Debtors", "concept": "Trade debtors", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Current Assets - Trade debtors", "ents": ["ST", "PT"]}, {"text": "Debtors - Trade debtors", "ents": ["LLP"]}, {"text": "Debtors less than 1 year - Trade debtors", "ents": ["LTD"]}], "rec": "Collapse", "dec": true, "canon": "Current Assets - Trade debtors", "simple": "Debtors - Trade Debtors", "simpleSrc": "list", "notes": "3 spellings differing only by section prefix; leaf identical."}, {"n": 174, "sec": "Debtors", "concept": "Accrued income and prepayments", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Current Assets - Other assets and prepayments", "ents": ["ST"]}, {"text": "Current Assets - Prepayments", "ents": ["PT"]}, {"text": "Debtors - Accrued income and prepayments", "ents": ["LLP"]}, {"text": "Debtors less than 1 year - Accrued income and prepayments", "ents": ["LTD"]}], "rec": "Keep", "dec": true, "canon": "Current Assets - Prepayments", "simple": "Prepayments", "simpleSrc": "list", "notes": "4 spellings with genuinely different leaves ('Other assets and prepayments' / 'Prepayments' / 'Accrued income and prepayments') - weak fuzzy equivalence."}, {"n": 175, "sec": "Debtors", "concept": "Other debtors", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Current Assets - Other debtors", "ents": ["ST", "PT"]}, {"text": "Debtors - Other debtors", "ents": ["LLP"]}, {"text": "Debtors less than 1 year - Other debtors", "ents": ["LTD"]}], "rec": "Collapse", "dec": true, "canon": "Current Assets - Other debtors", "simple": "Debtors - Other Debtors", "simpleSrc": "list", "notes": "3 spellings differing only by section prefix; leaf identical."}, {"n": 176, "sec": "Debtors", "concept": "Other current assets (PT)", "cls": "Entity-specific", "ents": "PT", "sp": [{"text": "Current Assets - Other current assets", "ents": ["PT"]}], "rec": "Gated", "dec": false, "canon": "Current Assets - Other current assets", "simple": "Current Assets - Other Current Assets", "simpleSrc": "list", "notes": "PT only."}, {"n": 177, "sec": "Debtors", "concept": "VAT debtor", "cls": "Entity-specific", "ents": "LTD", "sp": [{"text": "Debtors less than 1 year - VAT", "ents": ["LTD"]}], "rec": "Gated", "dec": false, "canon": "Debtors less than 1 year - VAT", "simple": "Debtors Less Than 1 Year - VAT", "simpleSrc": "list", "notes": "LTD only."}, {"n": 178, "sec": "Debtors", "concept": "Due from group undertakings", "cls": "Near-duplicate", "ents": "LLP+LTD", "sp": [{"text": "Debtors - Due from group undertakings", "ents": ["LLP"]}, {"text": "Debtors less than 1 year - Due from group undertakings", "ents": ["LTD"]}], "rec": "Collapse", "dec": true, "canon": "Debtors - Due from group undertakings", "simple": "Debtors - Due From Group Undertakings", "simpleSrc": "list", "notes": "2 spellings, LLP vs LTD; leaf identical."}, {"n": 179, "sec": "Debtors", "concept": "Debtors > 1 year - Trade debtors", "cls": "Entity-specific", "ents": "LTD", "sp": [{"text": "Debtors greater than 1 year - Trade debtors", "ents": ["LTD"]}], "rec": "Gated", "dec": false, "canon": "Debtors greater than 1 year - Trade debtors", "simple": "Debtors Greater Than 1 Year - Trade Debtors", "simpleSrc": "list", "notes": "LTD only."}, {"n": 180, "sec": "Debtors", "concept": "Debtors > 1 year - Accrued income and prepayments", "cls": "Entity-specific", "ents": "LTD", "sp": [{"text": "Debtors greater than 1 year - Accrued income and prepayments", "ents": ["LTD"]}], "rec": "Gated", "dec": false, "canon": "Debtors greater than 1 year - Accrued income and prepayments", "simple": "Debtors Greater Than 1 Year - Accrued Income And Prepayments", "simpleSrc": "list", "notes": "LTD only."}, {"n": 181, "sec": "Debtors", "concept": "Debtors > 1 year - Due from group undertakings", "cls": "Entity-specific", "ents": "LTD", "sp": [{"text": "Debtors greater than 1 year - Due from group undertakings", "ents": ["LTD"]}], "rec": "Gated", "dec": false, "canon": "Debtors greater than 1 year - Due from group undertakings", "simple": "Debtors Greater Than 1 Year - Due From Group Undertakings", "simpleSrc": "list", "notes": "LTD only."}, {"n": 182, "sec": "Debtors", "concept": "Debtors > 1 year - Other debtors", "cls": "Entity-specific", "ents": "LTD", "sp": [{"text": "Debtors greater than 1 year - Other debtors", "ents": ["LTD"]}], "rec": "Gated", "dec": false, "canon": "Debtors greater than 1 year - Other debtors", "simple": "Debtors Greater Than 1 Year - Other Debtors", "simpleSrc": "list", "notes": "LTD only."}, {"n": 183, "sec": "Current asset investments", "concept": "Listed", "cls": "Entity-specific", "ents": "LLP+LTD", "sp": [{"text": "Current asset investments - Listed", "ents": ["LLP", "LTD"]}], "rec": "Gated", "dec": false, "canon": "Current asset investments - Listed", "simple": "Current Asset Investments - Listed", "simpleSrc": "list", "notes": "LLP/LTD only."}, {"n": 184, "sec": "Current asset investments", "concept": "Unlisted", "cls": "Entity-specific", "ents": "LLP+LTD", "sp": [{"text": "Current asset investments - Unlisted", "ents": ["LLP", "LTD"]}], "rec": "Gated", "dec": false, "canon": "Current asset investments - Unlisted", "simple": "Current Asset Investments - Unlisted", "simpleSrc": "list", "notes": "LLP/LTD only."}, {"n": 185, "sec": "Bank & cash", "concept": "Bank / cash at bank", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Current Assets - Bank/building society balances", "ents": ["ST", "PT"]}, {"text": "Bank - Cash at bank and in hand", "ents": ["LLP"]}, {"text": "Cash - Cash at bank and in hand", "ents": ["LTD"]}], "rec": "Keep", "dec": true, "canon": "Current Assets - Bank/building society balances", "simple": "Cash At Bank And In Hand", "simpleSrc": "list", "notes": "3 spellings. ST/PT split bank vs 'Cash in hand' (next row); LLP/LTD have one combined line - so a collapse changes granularity, not just spelling."}, {"n": 186, "sec": "Bank & cash", "concept": "Cash in hand (ST/PT)", "cls": "Entity-specific", "ents": "ST+PT", "sp": [{"text": "Current Assets - Cash in hand", "ents": ["ST", "PT"]}], "rec": "Gated", "dec": false, "canon": "Current Assets - Cash in hand", "simple": "Current Assets - Cash In Hand", "simpleSrc": "list", "notes": "ST/PT only; folds into the combined LLP/LTD cash line above."}, {"n": 187, "sec": "Creditors < 1 year", "concept": "Trade creditors", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Liabilities - Trade creditors", "ents": ["ST", "PT"]}, {"text": "Creditors less than 1 year - Trade creditors", "ents": ["LLP", "LTD"]}], "rec": "Collapse", "dec": true, "canon": "Liabilities - Trade creditors", "simple": "Creditors Less Than 1 Year - Trade Creditors", "simpleSrc": "list", "notes": "2 spellings: ST/PT 'Liabilities - ...', LLP/LTD 'Creditors less than 1 year - ...'."}, {"n": 188, "sec": "Creditors < 1 year", "concept": "Overdrafts", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Liabilities - Overdrafts", "ents": ["ST", "PT"]}, {"text": "Creditors less than 1 year - Overdrafts", "ents": ["LLP", "LTD"]}], "rec": "Collapse", "dec": true, "canon": "Liabilities - Overdrafts", "simple": "Overdrafts", "simpleSrc": "list", "notes": "2 spellings: ST/PT vs LLP/LTD prefix; leaf identical."}, {"n": 189, "sec": "Creditors < 1 year", "concept": "Bank loans (short term)", "cls": "Near-duplicate", "ents": "ST+PT+LLP+LTD", "sp": [{"text": "Liabilities - Bank loans", "ents": ["ST", "PT"]}, {"text": "Creditors less than 1 year - Bank loans", "ents": ["LLP", "LTD"]}], "rec": "Collapse", "dec": true, "canon": "Liabilities - Bank loans", "simple": "Creditors Less Than 1 Year - Bank Loans", "simpleSrc": "list", "notes": "2 spellings: ST/PT vs LLP/LTD prefix; leaf identical. NOTE: leaf 'Bank loans' also exists under Creditors greater than 1 year - a collapsed canonical spelling must not be ambiguous between the two."}, {"n": 190, "sec": "Creditors < 1 year", "concept": "Accruals", "cls": "Near-duplicate", "ents": "PT+LLP+LTD", "sp": [{"text": "Liabilities - Accruals", "ents": ["PT"]}, {"text": "Creditors less than 1 year - Accruals", "ents": ["LLP", "LTD"]}], "rec": "Collapse", "dec": true, "canon": "Creditors less than 1 year - Accruals", "simple": "Creditors Less Than 1 Year - Accruals", "simpleSrc": "list", "notes": "2 spellings, PT vs LLP/LTD. ST combines accruals into 'Other liabilities and accruals' (separate row below)."}, {"n": 191, "sec": "Creditors < 1 year", "concept": "Other creditors", "cls": "Near-duplicate", "ents": "PT+LLP+LTD", "sp": [{"text": "Liabilities - Other liabilities", "ents": ["PT"]}, {"text": "Creditors less than 1 year - Other creditors", "ents": ["LLP", "LTD"]}], "rec": "Keep", "dec": true, "canon": "Creditors less than 1 year - Other creditors", "simple": "Creditors Less Than 1 Year - Other Creditors", "simpleSrc": "list", "notes": "2 spellings with different leaves ('Other liabilities' vs 'Other creditors'). ST equivalent is combined (next row)."}, {"n": 192, "sec": "Creditors < 1 year", "concept": "Other liabilities and accruals (ST)", "cls": "Entity-specific", "ents": "ST", "sp": [{"text": "Liabilities - Other liabilities and accruals", "ents": ["ST"]}], "rec": "Gated", "dec": false, "canon": "Liabilities - Other liabilities and accruals", "simple": "Other liabilities and accruals", "simpleSrc": "strip", "notes": "ST only - combines the Accruals and Other creditors concepts in one line."}, {"n": 193, "sec": "Creditors < 1 year", "concept": "Finance lease and HP contracts", "cls": "Entity-specific", "ents": "LLP+LTD", "sp": [{"text": "Creditors less than 1 year - Finance lease and HP contracts", "ents": ["LLP", "LTD"]}], "rec": "Gated", "dec": false, "canon": "Creditors less than 1 year - Finance lease and HP contracts", "simple": "Creditors Less Than 1 Year - Finance Lease And HP Contracts", "simpleSrc": "list", "notes": "LLP/LTD only."}, {"n": 194, "sec": "Creditors < 1 year", "concept": "Due to group undertakings", "cls": "Entity-specific", "ents": "LLP+LTD", "sp": [{"text": "Creditors less than 1 year - Due to group undertakings", "ents": ["LLP", "LTD"]}], "rec": "Gated", "dec": false, "canon": "Creditors less than 1 year - Due to group undertakings", "simple": "Creditors Less Than 1 Year - Due To Group Undertakings", "simpleSrc": "list", "notes": "LLP/LTD only."}, {"n": 195, "sec": "Creditors < 1 year", "concept": "Other taxes and social security", "cls": "Entity-specific", "ents": "LLP+LTD", "sp": [{"text": "Creditors less than 1 year - Other taxes and social security", "ents": ["LLP", "LTD"]}], "rec": "Gated", "dec": false, "canon": "Creditors less than 1 year - Other taxes and social security", "simple": "Creditors Less Than 1 Year - Other Taxes And Social Security", "simpleSrc": "list", "notes": "LLP/LTD only."}, {"n": 196, "sec": "Creditors < 1 year", "concept": "Deferred income", "cls": "Entity-specific", "ents": "LLP+LTD", "sp": [{"text": "Creditors less than 1 year - Deferred income", "ents": ["LLP", "LTD"]}], "rec": "Gated", "dec": false, "canon": "Creditors less than 1 year - Deferred income", "simple": "Creditors Less Than 1 Year - Deferred Income", "simpleSrc": "list", "notes": "LLP/LTD only."}, {"n": 197, "sec": "Creditors < 1 year", "concept": "VAT", "cls": "Entity-specific", "ents": "LTD", "sp": [{"text": "Creditors less than 1 year - VAT", "ents": ["LTD"]}], "rec": "Gated", "dec": false, "canon": "Creditors less than 1 year - VAT", "simple": "Creditors Less Than 1 Year - VAT", "simpleSrc": "list", "notes": "LTD only."}, {"n": 198, "sec": "Creditors < 1 year", "concept": "Corporation tax", "cls": "Entity-specific", "ents": "LTD", "sp": [{"text": "Creditors less than 1 year - Corporation tax", "ents": ["LTD"]}], "rec": "Gated", "dec": false, "canon": "Creditors less than 1 year - Corporation tax", "simple": "Creditors Less Than 1 Year - Corporation Tax", "simpleSrc": "list", "notes": "LTD only."}, {"n": 199, "sec": "Creditors < 1 year", "concept": "Proposed dividends", "cls": "Entity-specific", "ents": "LTD", "sp": [{"text": "Creditors less than 1 year - Proposed dividends", "ents": ["LTD"]}], "rec": "Gated", "dec": false, "canon": "Creditors less than 1 year - Proposed dividends", "simple": "Creditors Less Than 1 Year - Proposed Dividends", "simpleSrc": "list", "notes": "LTD only."}, {"n": 200, "sec": "Creditors < 1 year", "concept": "Accrued preference dividends", "cls": "Entity-specific", "ents": "LTD", "sp": [{"text": "Creditors less than 1 year - Accrued preference dividends", "ents": ["LTD"]}], "rec": "Gated", "dec": false, "canon": "Creditors less than 1 year - Accrued preference dividends", "simple": "Creditors Less Than 1 Year - Accrued Preference Dividends", "simpleSrc": "list", "notes": "LTD only."}, {"n": 201, "sec": "Creditors < 1 year", "concept": "Non-equity preference shares", "cls": "Entity-specific", "ents": "LTD", "sp": [{"text": "Creditors less than 1 year - Non-equity preference shares", "ents": ["LTD"]}], "rec": "Gated", "dec": false, "canon": "Creditors less than 1 year - Non-equity preference shares", "simple": "Creditors Less Than 1 Year - Non-Equity Preference Shares", "simpleSrc": "list", "notes": "LTD only."}, {"n": 202, "sec": "Creditors < 1 year", "concept": "Directors' loans", "cls": "Entity-specific", "ents": "LTD", "sp": [{"text": "Creditors less than 1 year - Directors' loans", "ents": ["LTD"]}], "rec": "Gated", "dec": false, "canon": "Creditors less than 1 year - Directors' loans", "simple": "Creditors Less Than 1 Year - Directors' Loans", "simpleSrc": "list", "notes": "LTD only."}, {"n": 203, "sec": "Creditors > 1 year", "concept": "Loans due after more than one year (ST/PT)", "cls": "Entity-specific", "ents": "ST+PT", "sp": [{"text": "Liabilities - Loans due after more than one year", "ents": ["ST", "PT"]}], "rec": "Gated", "dec": false, "canon": "Liabilities - Loans due after more than one year", "simple": "Loans due after more than one year", "simpleSrc": "strip", "notes": "ST/PT single long-term-loans line; LLP/LTD use the granular 'Creditors greater than 1 year' block below. Related concept but not a spelling variant."}, {"n": 204, "sec": "Creditors > 1 year", "concept": "> 1 year - Bank loans", "cls": "Entity-specific", "ents": "LLP+LTD", "sp": [{"text": "Creditors greater than 1 year - Bank loans", "ents": ["LLP", "LTD"]}], "rec": "Gated", "dec": false, "canon": "Creditors greater than 1 year - Bank loans", "simple": "Creditors Greater Than 1 Year - Bank Loans", "simpleSrc": "list", "notes": "LLP/LTD only."}, {"n": 205, "sec": "Creditors > 1 year", "concept": "> 1 year - Finance lease and HP contracts", "cls": "Entity-specific", "ents": "LLP+LTD", "sp": [{"text": "Creditors greater than 1 year - Finance lease and HP contracts", "ents": ["LLP", "LTD"]}], "rec": "Gated", "dec": false, "canon": "Creditors greater than 1 year - Finance lease and HP contracts", "simple": "Creditors Greater Than 1 Year - Finance Lease And HP Contracts", "simpleSrc": "list", "notes": "LLP/LTD only."}, {"n": 206, "sec": "Creditors > 1 year", "concept": "> 1 year - Trade creditors", "cls": "Entity-specific", "ents": "LLP+LTD", "sp": [{"text": "Creditors greater than 1 year - Trade creditors", "ents": ["LLP", "LTD"]}], "rec": "Gated", "dec": false, "canon": "Creditors greater than 1 year - Trade creditors", "simple": "Creditors Greater Than 1 Year - Trade Creditors", "simpleSrc": "list", "notes": "LLP/LTD only."}, {"n": 207, "sec": "Creditors > 1 year", "concept": "> 1 year - Due to group undertakings", "cls": "Entity-specific", "ents": "LLP+LTD", "sp": [{"text": "Creditors greater than 1 year - Due to group undertakings", "ents": ["LLP", "LTD"]}], "rec": "Gated", "dec": false, "canon": "Creditors greater than 1 year - Due to group undertakings", "simple": "Creditors Greater Than 1 Year - Due To Group Undertakings", "simpleSrc": "list", "notes": "LLP/LTD only."}, {"n": 208, "sec": "Creditors > 1 year", "concept": "> 1 year - Other taxes and social security", "cls": "Entity-specific", "ents": "LLP+LTD", "sp": [{"text": "Creditors greater than 1 year - Other taxes and social security", "ents": ["LLP", "LTD"]}], "rec": "Gated", "dec": false, "canon": "Creditors greater than 1 year - Other taxes and social security", "simple": "Creditors Greater Than 1 Year - Other Taxes And Social Security", "simpleSrc": "list", "notes": "LLP/LTD only."}, {"n": 209, "sec": "Creditors > 1 year", "concept": "> 1 year - Accruals", "cls": "Entity-specific", "ents": "LLP+LTD", "sp": [{"text": "Creditors greater than 1 year - Accruals", "ents": ["LLP", "LTD"]}], "rec": "Gated", "dec": false, "canon": "Creditors greater than 1 year - Accruals", "simple": "Creditors Greater Than 1 Year - Accruals", "simpleSrc": "list", "notes": "LLP/LTD only."}, {"n": 210, "sec": "Creditors > 1 year", "concept": "> 1 year - Deferred income", "cls": "Entity-specific", "ents": "LLP+LTD", "sp": [{"text": "Creditors greater than 1 year - Deferred income", "ents": ["LLP", "LTD"]}], "rec": "Gated", "dec": false, "canon": "Creditors greater than 1 year - Deferred income", "simple": "Creditors Greater Than 1 Year - Deferred Income", "simpleSrc": "list", "notes": "LLP/LTD only."}, {"n": 211, "sec": "Creditors > 1 year", "concept": "> 1 year - Other creditors", "cls": "Entity-specific", "ents": "LLP+LTD", "sp": [{"text": "Creditors greater than 1 year - Other creditors", "ents": ["LLP", "LTD"]}], "rec": "Gated", "dec": false, "canon": "Creditors greater than 1 year - Other creditors", "simple": "Creditors Greater Than 1 Year - Other Creditors", "simpleSrc": "list", "notes": "LLP/LTD only."}, {"n": 212, "sec": "Creditors > 1 year", "concept": "> 1 year - Corporation tax", "cls": "Entity-specific", "ents": "LTD", "sp": [{"text": "Creditors greater than 1 year - Corporation tax", "ents": ["LTD"]}], "rec": "Gated", "dec": false, "canon": "Creditors greater than 1 year - Corporation tax", "simple": "Creditors Greater Than 1 Year - Corporation Tax", "simpleSrc": "list", "notes": "LTD only."}, {"n": 213, "sec": "Creditors > 1 year", "concept": "> 1 year - Non-equity preference shares", "cls": "Entity-specific", "ents": "LTD", "sp": [{"text": "Creditors greater than 1 year - Non-equity preference shares", "ents": ["LTD"]}], "rec": "Gated", "dec": false, "canon": "Creditors greater than 1 year - Non-equity preference shares", "simple": "Creditors Greater Than 1 Year - Non-Equity Preference Shares", "simpleSrc": "list", "notes": "LTD only."}, {"n": 214, "sec": "Creditors > 1 year", "concept": "> 1 year - Directors' loans", "cls": "Entity-specific", "ents": "LTD", "sp": [{"text": "Creditors greater than 1 year - Directors' loans", "ents": ["LTD"]}], "rec": "Gated", "dec": false, "canon": "Creditors greater than 1 year - Directors' loans", "simple": "Creditors Greater Than 1 Year - Directors' Loans", "simpleSrc": "list", "notes": "LTD only."}, {"n": 215, "sec": "Provisions & deferred tax", "concept": "Provisions (LLP) - Brought forward", "cls": "Entity-specific", "ents": "LLP", "sp": [{"text": "Provisions for liabilities - Brought forward", "ents": ["LLP"]}], "rec": "Gated", "dec": false, "canon": "Provisions for liabilities - Brought forward", "simple": "Provisions For Liabilities - Brought Forward", "simpleSrc": "list", "notes": "LLP only - movement-style provisions block. LTD uses a single 'Provisions' line (below)."}, {"n": 216, "sec": "Provisions & deferred tax", "concept": "Provisions (LLP) - Made during period", "cls": "Entity-specific", "ents": "LLP", "sp": [{"text": "Provisions for liabilities - Made during period", "ents": ["LLP"]}], "rec": "Gated", "dec": false, "canon": "Provisions for liabilities - Made during period", "simple": "Provisions For Liabilities - Made During Period", "simpleSrc": "list", "notes": "LLP only - movement-style provisions block. LTD uses a single 'Provisions' line (below)."}, {"n": 217, "sec": "Provisions & deferred tax", "concept": "Provisions (LLP) - Utilised", "cls": "Entity-specific", "ents": "LLP", "sp": [{"text": "Provisions for liabilities - Utilised", "ents": ["LLP"]}], "rec": "Gated", "dec": false, "canon": "Provisions for liabilities - Utilised", "simple": "Provisions For Liabilities - Utilised", "simpleSrc": "list", "notes": "LLP only - movement-style provisions block. LTD uses a single 'Provisions' line (below)."}, {"n": 218, "sec": "Provisions & deferred tax", "concept": "Provisions (LTD)", "cls": "Entity-specific", "ents": "LTD", "sp": [{"text": "Provisions for liabilities - Provisions", "ents": ["LTD"]}], "rec": "Gated", "dec": false, "canon": "Provisions for liabilities - Provisions", "simple": "Provisions", "simpleSrc": "strip", "notes": "LTD only - single balance line."}, {"n": 219, "sec": "Provisions & deferred tax", "concept": "Deferred tax - Brought forward", "cls": "Entity-specific", "ents": "LTD", "sp": [{"text": "Deferred tax - Brought forward", "ents": ["LTD"]}], "rec": "Gated", "dec": false, "canon": "Deferred tax - Brought forward", "simple": "Deferred Tax - Brought Forward", "simpleSrc": "list", "notes": "LTD only."}, {"n": 220, "sec": "Provisions & deferred tax", "concept": "Deferred tax - Charged to the profit & loss account", "cls": "Entity-specific", "ents": "LTD", "sp": [{"text": "Deferred tax - Charged to the profit & loss account", "ents": ["LTD"]}], "rec": "Gated", "dec": false, "canon": "Deferred tax - Charged to the profit & loss account", "simple": "Deferred Tax - Charged To The Profit & Loss Account", "simpleSrc": "list", "notes": "LTD only."}, {"n": 221, "sec": "Provisions & deferred tax", "concept": "Deferred tax - Charged to other comprehensive income", "cls": "Entity-specific", "ents": "LTD", "sp": [{"text": "Deferred tax - Charged to other comprehensive income", "ents": ["LTD"]}], "rec": "Gated", "dec": false, "canon": "Deferred tax - Charged to other comprehensive income", "simple": "Deferred Tax - Charged To Other Comprehensive Income", "simpleSrc": "list", "notes": "LTD only."}, {"n": 222, "sec": "Capital (ST/PT)", "concept": "Balance at start of period", "cls": "Entity-specific", "ents": "ST+PT", "sp": [{"text": "Capital account - Balance at start of period", "ents": ["ST", "PT"]}], "rec": "Gated", "dec": false, "canon": "Capital account - Balance at start of period", "simple": "Capital Account - Balance At Start Of Period", "simpleSrc": "list", "notes": "ST/PT only. Same headings for both; partnership per-partner ratio split is handled by the formulas, not by extra headings."}, {"n": 223, "sec": "Capital (ST/PT)", "concept": "Capital introduced", "cls": "Entity-specific", "ents": "ST+PT", "sp": [{"text": "Capital account - Capital introduced", "ents": ["ST", "PT"]}], "rec": "Gated", "dec": false, "canon": "Capital account - Capital introduced", "simple": "Capital Account - Capital Introduced", "simpleSrc": "list", "notes": "ST/PT only. Same headings for both; partnership per-partner ratio split is handled by the formulas, not by extra headings."}, {"n": 224, "sec": "Capital (ST/PT)", "concept": "Drawings", "cls": "Entity-specific", "ents": "ST+PT", "sp": [{"text": "Capital account - Drawings", "ents": ["ST", "PT"]}], "rec": "Gated", "dec": false, "canon": "Capital account - Drawings", "simple": "Capital account - Drawings", "simpleSrc": "strip", "notes": "ST/PT only. Same headings for both; partnership per-partner ratio split is handled by the formulas, not by extra headings."}, {"n": 225, "sec": "Members' interests (LLP)", "concept": "Members capital classified as debt - Brought forward", "cls": "Entity-specific", "ents": "LLP", "sp": [{"text": "Members capital classified as debt - Brought forward", "ents": ["LLP"]}], "rec": "Gated", "dec": false, "canon": "Members capital classified as debt - Brought forward", "simple": "Members Capital Classified As Debt - Brought Forward", "simpleSrc": "list", "notes": "LLP only - members' capital/appropriation."}, {"n": 226, "sec": "Members' interests (LLP)", "concept": "Members capital classified as debt - Introduced", "cls": "Entity-specific", "ents": "LLP", "sp": [{"text": "Members capital classified as debt - Introduced", "ents": ["LLP"]}], "rec": "Gated", "dec": false, "canon": "Members capital classified as debt - Introduced", "simple": "Members Capital Classified As Debt - Introduced", "simpleSrc": "list", "notes": "LLP only - members' capital/appropriation."}, {"n": 227, "sec": "Members' interests (LLP)", "concept": "Members capital classified as debt - Repaid", "cls": "Entity-specific", "ents": "LLP", "sp": [{"text": "Members capital classified as debt - Repaid", "ents": ["LLP"]}], "rec": "Gated", "dec": false, "canon": "Members capital classified as debt - Repaid", "simple": "Members Capital Classified As Debt - Repaid", "simpleSrc": "list", "notes": "LLP only - members' capital/appropriation."}, {"n": 228, "sec": "Members' interests (LLP)", "concept": "Members capital classified as debt - Other movements", "cls": "Entity-specific", "ents": "LLP", "sp": [{"text": "Members capital classified as debt - Other movements", "ents": ["LLP"]}], "rec": "Gated", "dec": false, "canon": "Members capital classified as debt - Other movements", "simple": "Members Capital Classified As Debt - Other Movements", "simpleSrc": "list", "notes": "LLP only - members' capital/appropriation."}, {"n": 229, "sec": "Members' interests (LLP)", "concept": "Loans from members - Brought forward", "cls": "Entity-specific", "ents": "LLP", "sp": [{"text": "Loans from members - Brought forward", "ents": ["LLP"]}], "rec": "Gated", "dec": false, "canon": "Loans from members - Brought forward", "simple": "Loans From Members - Brought Forward", "simpleSrc": "list", "notes": "LLP only - members' capital/appropriation."}, {"n": 230, "sec": "Members' interests (LLP)", "concept": "Loans from members - Introduced", "cls": "Entity-specific", "ents": "LLP", "sp": [{"text": "Loans from members - Introduced", "ents": ["LLP"]}], "rec": "Gated", "dec": false, "canon": "Loans from members - Introduced", "simple": "Loans From Members - Introduced", "simpleSrc": "list", "notes": "LLP only - members' capital/appropriation."}, {"n": 231, "sec": "Members' interests (LLP)", "concept": "Loans from members - Repaid", "cls": "Entity-specific", "ents": "LLP", "sp": [{"text": "Loans from members - Repaid", "ents": ["LLP"]}], "rec": "Gated", "dec": false, "canon": "Loans from members - Repaid", "simple": "Loans From Members - Repaid", "simpleSrc": "list", "notes": "LLP only - members' capital/appropriation."}, {"n": 232, "sec": "Members' interests (LLP)", "concept": "Loans from members - Other movements", "cls": "Entity-specific", "ents": "LLP", "sp": [{"text": "Loans from members - Other movements", "ents": ["LLP"]}], "rec": "Gated", "dec": false, "canon": "Loans from members - Other movements", "simple": "Loans From Members - Other Movements", "simpleSrc": "list", "notes": "LLP only - members' capital/appropriation."}, {"n": 233, "sec": "Members' interests (LLP)", "concept": "Members retirement benefit liabilities - Brought forward", "cls": "Entity-specific", "ents": "LLP", "sp": [{"text": "Members retirement benefit liabilities - Brought forward", "ents": ["LLP"]}], "rec": "Gated", "dec": false, "canon": "Members retirement benefit liabilities - Brought forward", "simple": "Members Retirement Benefit Liabilities - Brought Forward", "simpleSrc": "list", "notes": "LLP only - members' capital/appropriation."}, {"n": 234, "sec": "Members' interests (LLP)", "concept": "Members retirement benefit liabilities - Charged to remuneration", "cls": "Entity-specific", "ents": "LLP", "sp": [{"text": "Members retirement benefit liabilities - Charged to remuneration", "ents": ["LLP"]}], "rec": "Gated", "dec": false, "canon": "Members retirement benefit liabilities - Charged to remuneration", "simple": "Members Retirement Benefit Liabilities - Charged To Remuneration", "simpleSrc": "list", "notes": "LLP only - members' capital/appropriation."}, {"n": 235, "sec": "Members' interests (LLP)", "concept": "Members retirement benefit liabilities - Transferred to creditors", "cls": "Entity-specific", "ents": "LLP", "sp": [{"text": "Members retirement benefit liabilities - Transferred to creditors", "ents": ["LLP"]}], "rec": "Gated", "dec": false, "canon": "Members retirement benefit liabilities - Transferred to creditors", "simple": "Members Retirement Benefit Liabilities - Transferred To Creditors", "simpleSrc": "list", "notes": "LLP only - members' capital/appropriation."}, {"n": 236, "sec": "Members' interests (LLP)", "concept": "Members retirement benefit liabilities - Drawings", "cls": "Entity-specific", "ents": "LLP", "sp": [{"text": "Members retirement benefit liabilities - Drawings", "ents": ["LLP"]}], "rec": "Gated", "dec": false, "canon": "Members retirement benefit liabilities - Drawings", "simple": "Members Retirement Benefit Liabilities - Drawings", "simpleSrc": "list", "notes": "LLP only - members' capital/appropriation."}, {"n": 237, "sec": "Members' interests (LLP)", "concept": "Members retirement benefit liabilities - Other movements", "cls": "Entity-specific", "ents": "LLP", "sp": [{"text": "Members retirement benefit liabilities - Other movements", "ents": ["LLP"]}], "rec": "Gated", "dec": false, "canon": "Members retirement benefit liabilities - Other movements", "simple": "Members Retirement Benefit Liabilities - Other Movements", "simpleSrc": "list", "notes": "LLP only - members' capital/appropriation."}, {"n": 238, "sec": "Members' interests (LLP)", "concept": "Profits due to members - Brought forward", "cls": "Entity-specific", "ents": "LLP", "sp": [{"text": "Profits due to members - Brought forward", "ents": ["LLP"]}], "rec": "Gated", "dec": false, "canon": "Profits due to members - Brought forward", "simple": "Profits Due To Members - Brought Forward", "simpleSrc": "list", "notes": "LLP only - members' capital/appropriation."}, {"n": 239, "sec": "Members' interests (LLP)", "concept": "Profits due to members - Members' remuneration", "cls": "Entity-specific", "ents": "LLP", "sp": [{"text": "Profits due to members - Members' remuneration", "ents": ["LLP"]}], "rec": "Gated", "dec": false, "canon": "Profits due to members - Members' remuneration", "simple": "Profits Due To Members - Members' Remuneration", "simpleSrc": "list", "notes": "LLP only - members' capital/appropriation."}, {"n": 240, "sec": "Members' interests (LLP)", "concept": "Profits due to members - Allocation of profits", "cls": "Entity-specific", "ents": "LLP", "sp": [{"text": "Profits due to members - Allocation of profits", "ents": ["LLP"]}], "rec": "Gated", "dec": false, "canon": "Profits due to members - Allocation of profits", "simple": "Profits Due To Members - Allocation Of Profits", "simpleSrc": "list", "notes": "LLP only - members' capital/appropriation."}, {"n": 241, "sec": "Members' interests (LLP)", "concept": "Profits due to members - Drawings", "cls": "Entity-specific", "ents": "LLP", "sp": [{"text": "Profits due to members - Drawings", "ents": ["LLP"]}], "rec": "Gated", "dec": false, "canon": "Profits due to members - Drawings", "simple": "Profits due to members - Drawings", "simpleSrc": "strip", "notes": "LLP only - members' capital/appropriation."}, {"n": 242, "sec": "Members' interests (LLP)", "concept": "Profits due to members - Other movement", "cls": "Entity-specific", "ents": "LLP", "sp": [{"text": "Profits due to members - Other movement", "ents": ["LLP"]}], "rec": "Gated", "dec": false, "canon": "Profits due to members - Other movement", "simple": "Profits Due To Members - Other Movement", "simpleSrc": "list", "notes": "LLP only - members' capital/appropriation."}, {"n": 243, "sec": "Members' interests (LLP)", "concept": "Members equity capital - Brought forward", "cls": "Entity-specific", "ents": "LLP", "sp": [{"text": "Members equity capital - Brought forward", "ents": ["LLP"]}], "rec": "Gated", "dec": false, "canon": "Members equity capital - Brought forward", "simple": "Members Equity Capital - Brought Forward", "simpleSrc": "list", "notes": "LLP only - members' capital/appropriation."}, {"n": 244, "sec": "Members' interests (LLP)", "concept": "Members equity capital - Introduced", "cls": "Entity-specific", "ents": "LLP", "sp": [{"text": "Members equity capital - Introduced", "ents": ["LLP"]}], "rec": "Gated", "dec": false, "canon": "Members equity capital - Introduced", "simple": "Members Equity Capital - Introduced", "simpleSrc": "list", "notes": "LLP only - members' capital/appropriation."}, {"n": 245, "sec": "Members' interests (LLP)", "concept": "Members equity capital - Repaid", "cls": "Entity-specific", "ents": "LLP", "sp": [{"text": "Members equity capital - Repaid", "ents": ["LLP"]}], "rec": "Gated", "dec": false, "canon": "Members equity capital - Repaid", "simple": "Members Equity Capital - Repaid", "simpleSrc": "list", "notes": "LLP only - members' capital/appropriation."}, {"n": 246, "sec": "Members' interests (LLP)", "concept": "Members equity capital - Other movements", "cls": "Entity-specific", "ents": "LLP", "sp": [{"text": "Members equity capital - Other movements", "ents": ["LLP"]}], "rec": "Gated", "dec": false, "canon": "Members equity capital - Other movements", "simple": "Members Equity Capital - Other Movements", "simpleSrc": "list", "notes": "LLP only - members' capital/appropriation."}, {"n": 247, "sec": "Reserves", "concept": "Revaluation reserve - Brought forward", "cls": "Entity-specific", "ents": "LLP+LTD", "sp": [{"text": "Revaluation reserve - Brought forward", "ents": ["LLP", "LTD"]}], "rec": "Gated", "dec": false, "canon": "Revaluation reserve - Brought forward", "simple": "Revaluation Reserve - Brought Forward", "simpleSrc": "list", "notes": "LLP/LTD only."}, {"n": 248, "sec": "Reserves", "concept": "Revaluation reserve - Gain on revaluation of land and buildings", "cls": "Entity-specific", "ents": "LLP+LTD", "sp": [{"text": "Revaluation reserve - Gain on revaluation of land and buildings", "ents": ["LLP", "LTD"]}], "rec": "Gated", "dec": false, "canon": "Revaluation reserve - Gain on revaluation of land and buildings", "simple": "Revaluation Reserve - Gain On Revaluation Of Land And Buildings", "simpleSrc": "list", "notes": "LLP/LTD only."}, {"n": 249, "sec": "Reserves", "concept": "Revaluation reserve - Gain on revaluation of subsidiaries etc", "cls": "Entity-specific", "ents": "LLP", "sp": [{"text": "Revaluation reserve - Gain on revaluation of subsidiaries etc", "ents": ["LLP"]}], "rec": "Gated", "dec": false, "canon": "Revaluation reserve - Gain on revaluation of subsidiaries etc", "simple": "Revaluation Reserve - Gain On Revaluation Of Subsidiaries Etc", "simpleSrc": "list", "notes": "LLP only."}, {"n": 250, "sec": "Reserves", "concept": "Revaluation reserve - Other movements", "cls": "Entity-specific", "ents": "LLP", "sp": [{"text": "Revaluation reserve - Other movements", "ents": ["LLP"]}], "rec": "Gated", "dec": false, "canon": "Revaluation reserve - Other movements", "simple": "Revaluation Reserve - Other Movements", "simpleSrc": "list", "notes": "LLP only."}, {"n": 251, "sec": "Reserves", "concept": "Revaluation reserve - Deferred taxation arising on revaluation", "cls": "Entity-specific", "ents": "LTD", "sp": [{"text": "Revaluation reserve - Deferred taxation arising on revaluation", "ents": ["LTD"]}], "rec": "Gated", "dec": false, "canon": "Revaluation reserve - Deferred taxation arising on revaluation", "simple": "Revaluation Reserve - Deferred Taxation Arising On Revaluation", "simpleSrc": "list", "notes": "LTD only."}, {"n": 252, "sec": "Reserves", "concept": "Other reserves - Brought forward", "cls": "Entity-specific", "ents": "LLP", "sp": [{"text": "Other reserves - Brought forward", "ents": ["LLP"]}], "rec": "Gated", "dec": false, "canon": "Other reserves - Brought forward", "simple": "Other Reserves - Brought Forward", "simpleSrc": "list", "notes": "LLP only."}, {"n": 253, "sec": "Reserves", "concept": "Other reserves - Allocation of profits to members", "cls": "Entity-specific", "ents": "LLP", "sp": [{"text": "Other reserves - Allocation of profits to members", "ents": ["LLP"]}], "rec": "Gated", "dec": false, "canon": "Other reserves - Allocation of profits to members", "simple": "Other Reserves - Allocation Of Profits To Members", "simpleSrc": "list", "notes": "LLP only."}, {"n": 254, "sec": "Reserves", "concept": "Other reserves - Movement in year", "cls": "Entity-specific", "ents": "LLP", "sp": [{"text": "Other reserves - Movement in year", "ents": ["LLP"]}], "rec": "Gated", "dec": false, "canon": "Other reserves - Movement in year", "simple": "Other Reserves - Movement In Year", "simpleSrc": "list", "notes": "LLP only."}, {"n": 255, "sec": "Share capital & reserves (LTD)", "concept": "Share capital - Brought forward", "cls": "Entity-specific", "ents": "LTD", "sp": [{"text": "Share capital - Brought forward", "ents": ["LTD"]}], "rec": "Gated", "dec": false, "canon": "Share capital - Brought forward", "simple": "Share Capital - Brought Forward", "simpleSrc": "list", "notes": "LTD only - share capital / reserves."}, {"n": 256, "sec": "Share capital & reserves (LTD)", "concept": "Share capital - Shares issued", "cls": "Entity-specific", "ents": "LTD", "sp": [{"text": "Share capital - Shares issued", "ents": ["LTD"]}], "rec": "Gated", "dec": false, "canon": "Share capital - Shares issued", "simple": "Share Capital - Shares Issued", "simpleSrc": "list", "notes": "LTD only - share capital / reserves."}, {"n": 257, "sec": "Share capital & reserves (LTD)", "concept": "Share capital - Shares redeemed", "cls": "Entity-specific", "ents": "LTD", "sp": [{"text": "Share capital - Shares redeemed", "ents": ["LTD"]}], "rec": "Gated", "dec": false, "canon": "Share capital - Shares redeemed", "simple": "Share Capital - Shares Redeemed", "simpleSrc": "list", "notes": "LTD only - share capital / reserves."}, {"n": 258, "sec": "Share capital & reserves (LTD)", "concept": "Share premium - Brought forward", "cls": "Entity-specific", "ents": "LTD", "sp": [{"text": "Share premium - Brought forward", "ents": ["LTD"]}], "rec": "Gated", "dec": false, "canon": "Share premium - Brought forward", "simple": "Share Premium - Brought Forward", "simpleSrc": "list", "notes": "LTD only - share capital / reserves."}, {"n": 259, "sec": "Share capital & reserves (LTD)", "concept": "Share premium - On shares issued", "cls": "Entity-specific", "ents": "LTD", "sp": [{"text": "Share premium - On shares issued", "ents": ["LTD"]}], "rec": "Gated", "dec": false, "canon": "Share premium - On shares issued", "simple": "Share Premium - On Shares Issued", "simpleSrc": "list", "notes": "LTD only - share capital / reserves."}, {"n": 260, "sec": "Share capital & reserves (LTD)", "concept": "Share premium - Expenses of issue", "cls": "Entity-specific", "ents": "LTD", "sp": [{"text": "Share premium - Expenses of issue", "ents": ["LTD"]}], "rec": "Gated", "dec": false, "canon": "Share premium - Expenses of issue", "simple": "Share Premium - Expenses Of Issue", "simpleSrc": "list", "notes": "LTD only - share capital / reserves."}, {"n": 261, "sec": "Share capital & reserves (LTD)", "concept": "Fair value reserve - Brought forward", "cls": "Entity-specific", "ents": "LTD", "sp": [{"text": "Fair value reserve - Brought forward", "ents": ["LTD"]}], "rec": "Gated", "dec": false, "canon": "Fair value reserve - Brought forward", "simple": "Fair Value Reserve - Brought Forward", "simpleSrc": "list", "notes": "LTD only - share capital / reserves."}, {"n": 262, "sec": "Share capital & reserves (LTD)", "concept": "Fair value reserve - Transfer to/from profit and loss account", "cls": "Entity-specific", "ents": "LTD", "sp": [{"text": "Fair value reserve - Transfer to/from profit and loss account", "ents": ["LTD"]}], "rec": "Gated", "dec": false, "canon": "Fair value reserve - Transfer to/from profit and loss account", "simple": "Fair Value Reserve - Transfer To/From Profit And Loss Account", "simpleSrc": "list", "notes": "LTD only - share capital / reserves."}, {"n": 263, "sec": "Share capital & reserves (LTD)", "concept": "Capital redemption reserve - Brought forward", "cls": "Entity-specific", "ents": "LTD", "sp": [{"text": "Capital redemption reserve - Brought forward", "ents": ["LTD"]}], "rec": "Gated", "dec": false, "canon": "Capital redemption reserve - Brought forward", "simple": "Capital Redemption Reserve - Brought Forward", "simpleSrc": "list", "notes": "LTD only - share capital / reserves."}, {"n": 264, "sec": "Share capital & reserves (LTD)", "concept": "Capital redemption reserve - Transfer from Share Capital", "cls": "Entity-specific", "ents": "LTD", "sp": [{"text": "Capital redemption reserve - Transfer from Share Capital", "ents": ["LTD"]}], "rec": "Gated", "dec": false, "canon": "Capital redemption reserve - Transfer from Share Capital", "simple": "Capital Redemption Reserve - Transfer From Share Capital", "simpleSrc": "list", "notes": "LTD only - share capital / reserves."}, {"n": 265, "sec": "Share capital & reserves (LTD)", "concept": "Capital contribution reserve - Brought forward", "cls": "Entity-specific", "ents": "LTD", "sp": [{"text": "Capital contribution reserve - Brought forward", "ents": ["LTD"]}], "rec": "Gated", "dec": false, "canon": "Capital contribution reserve - Brought forward", "simple": "Capital Contribution Reserve - Brought Forward", "simpleSrc": "list", "notes": "LTD only - share capital / reserves."}, {"n": 266, "sec": "Share capital & reserves (LTD)", "concept": "Capital contribution reserve - Movement in the year", "cls": "Entity-specific", "ents": "LTD", "sp": [{"text": "Capital contribution reserve - Movement in the year", "ents": ["LTD"]}], "rec": "Gated", "dec": false, "canon": "Capital contribution reserve - Movement in the year", "simple": "Capital Contribution Reserve - Movement In The Year", "simpleSrc": "list", "notes": "LTD only - share capital / reserves."}, {"n": 267, "sec": "Share capital & reserves (LTD)", "concept": "Profit and loss account - Brought forward", "cls": "Entity-specific", "ents": "LTD", "sp": [{"text": "Profit and loss account - Brought forward", "ents": ["LTD"]}], "rec": "Gated", "dec": false, "canon": "Profit and loss account - Brought forward", "simple": "Profit And Loss Account - Brought Forward", "simpleSrc": "list", "notes": "LTD only - share capital / reserves."}, {"n": 268, "sec": "Share capital & reserves (LTD)", "concept": "Profit and loss account - Equity dividends", "cls": "Entity-specific", "ents": "LTD", "sp": [{"text": "Profit and loss account - Equity dividends", "ents": ["LTD"]}], "rec": "Gated", "dec": false, "canon": "Profit and loss account - Equity dividends", "simple": "Equity dividends", "simpleSrc": "strip", "notes": "LTD only - share capital / reserves."}, {"n": 269, "sec": "Share capital & reserves (LTD)", "concept": "Profit and loss account - Transfer to capital redemption reserve", "cls": "Entity-specific", "ents": "LTD", "sp": [{"text": "Profit and loss account - Transfer to capital redemption reserve", "ents": ["LTD"]}], "rec": "Gated", "dec": false, "canon": "Profit and loss account - Transfer to capital redemption reserve", "simple": "Profit And Loss Account - Transfer To Capital Redemption Reserve", "simpleSrc": "list", "notes": "LTD only - share capital / reserves."}, {"n": 270, "sec": "Share capital & reserves (LTD)", "concept": "Profit and loss account - Transfer to/from fair value reserve", "cls": "Entity-specific", "ents": "LTD", "sp": [{"text": "Profit and loss account - Transfer to/from fair value reserve", "ents": ["LTD"]}], "rec": "Gated", "dec": false, "canon": "Profit and loss account - Transfer to/from fair value reserve", "simple": "Transfer to/from fair value reserve", "simpleSrc": "strip", "notes": "LTD only - share capital / reserves."}, {"n": 271, "sec": "Share capital & reserves (LTD)", "concept": "Called up share capital not paid", "cls": "Entity-specific", "ents": "LTD", "sp": [{"text": "Called up share capital not paid", "ents": ["LTD"]}], "rec": "Gated", "dec": false, "canon": "Called up share capital not paid", "simple": "Called Up Share Capital Not Paid", "simpleSrc": "list", "notes": "LTD only."}], "sections": ["Income", "Cost of sales", "Distribution costs", "Other income", "Employee costs", "Motor & travel", "Premises costs", "General administration", "Advertising & entertaining", "Legal & professional", "Bad debts", "Interest & finance charges", "Depreciation & disposals", "Other expenses", "Gains and losses", "Members' remuneration (LLP)", "Taxation (LTD)", "Intangible fixed assets", "Tangible fixed assets", "Fixed asset investments", "Stocks & WIP", "Debtors", "Current asset investments", "Bank & cash", "Creditors < 1 year", "Creditors > 1 year", "Provisions & deferred tax", "Capital (ST/PT)", "Members' interests (LLP)", "Reserves", "Share capital & reserves (LTD)"]};
+const LS_KEY = 'utb-decisions-v1';
+const tb = document.getElementById('tb');
+const q = document.getElementById('q');
+const secsel = document.getElementById('secsel');
+const countEl = document.getElementById('count');
+const emptyEl = document.getElementById('empty');
+const progEl = document.getElementById('progstat');
+const toast = document.getElementById('toast');
+const dlg = document.getElementById('exportdlg');
+let mode = 'dec';
+
+let state = {};
+try { state = JSON.parse(localStorage.getItem(LS_KEY) || '{}') || {}; } catch (e) { state = {}; }
+function saveState(){ try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (e) {} }
+function st(n){ return state[n] || {}; }
+function setSt(n, patch){ state[n] = Object.assign({}, state[n], patch); saveState(); }
+
+const decRows = DATA.rows.filter(r => r.dec);
+
+// Stable line numbers: every concept row reserves one slot per spelling in the
+// full 395-line expansion, so a heading keeps the SAME number in every copy,
+// regardless of collapse/keep choices or which rows are included.
+// Spacing between consecutive stable numbers. IRIS SUMS every entry that
+// fuzzy-matches the same nominal, so a combined total must never look like a
+// single heading. With this spacing every single heading is 1 (mod SPACING) and
+// a sum of k headings is k (mod SPACING). SPACING must exceed the largest
+// possible merge; there are well under 1000 heading-slots in the whole TB, so
+// even IRIS merging the ENTIRE trial balance onto one nominal (the theoretical
+// maximum) still reads its count exactly — aliasing is impossible. value %
+// SPACING is therefore always the precise number of headings merged.
+// Individual numbers stay under ~400,000 and the largest conceivable combined
+// total (the whole TB summed) is ~78,000,000 — both far inside IRIS's numeric
+// range (it accepts values up to 999,999,999,999).
+const SPACING = 1000;
+const STABLE = {};
+{
+  let c = 1;
+  for (const r of DATA.rows) { STABLE[r.n] = c; c += SPACING * (r.dec ? r.sp.length : 1); }
+}
+
+DATA.sections.forEach(s => {
+  const o = document.createElement('option'); o.value = s; o.textContent = s; secsel.appendChild(o);
+});
+
+const clsPill = c => c === 'Common core' ? '<span class="pill core">Core</span>'
+  : c === 'Entity-specific' ? '<span class="pill spec">Entity</span>'
+  : '<span class="pill near">Near-dup</span>';
+
+function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function decidedCount(){
+  return decRows.filter(r => { const s = st(r.n); return s.choice || (s.note && s.note.trim()); }).length;
+}
+function updateProg(){
+  progEl.textContent = decidedCount() + ' / ' + decRows.length;
+  document.getElementById('finstat').textContent = DATA.rows.filter(r => st(r.n).fin).length;
+}
+
+function showToast(msg){
+  toast.textContent = msg; toast.classList.add('show');
+  clearTimeout(showToast.t); showToast.t = setTimeout(() => toast.classList.remove('show'), 2200);
+}
+
+function render(){
+  const term = q.value.trim().toLowerCase();
+  const sec = secsel.value;
+  let out = '', shown = 0, curSec = null, secBuf = '', secCount = 0;
+  const flush = () => {
+    if (curSec !== null && secCount > 0) {
+      out += '<tr class="sec"><td colspan="6">' + esc(curSec) +
+             '<span class="seccount">' + secCount + ' row' + (secCount>1?'s':'') + '</span></td></tr>' + secBuf;
+    }
+  };
+  for (const r of DATA.rows) {
+    const s = st(r.n);
+    const decided = !!(s.choice || (s.note && s.note.trim()));
+    if (mode === 'fin') { if (!s.fin) continue; }
+    else if (s.fin) continue;
+    if (mode === 'dec' && !r.dec) continue;
+    if (mode === 'undec') {
+      const reviewed = r.dec ? decided : !!((s.note || '').trim() || s.ok);
+      if (reviewed) continue;
+    }
+    if (mode !== 'all' && mode !== 'dec' && mode !== 'undec' && mode !== 'fin' && r.cls !== mode) continue;
+    if (sec && r.sec !== sec) continue;
+    if (term) {
+      const hay = (r.concept + ' ' + r.sec + ' ' + r.notes + ' ' +
+                   r.sp.map(x=>x.text).join(' ')).toLowerCase();
+      if (!hay.includes(term)) continue;
+    }
+    if (r.sec !== curSec) { flush(); curSec = r.sec; secBuf = ''; secCount = 0; }
+    const sps = r.sp.map((x, k) =>
+      '<div class="sp"><span class="stbl" title="Stable paste number">' + (STABLE[r.n] + SPACING * k) + '</span>' +
+      esc(x.text) + '<span class="entchips">' +
+      x.ents.map(e=>'<span class="ent">'+e+'</span>').join('') + '</span></div>').join('');
+    let decCell = '';
+    if (r.dec) {
+      const typed = (s.note || '').trim();
+      let canonPrev = '';
+      if (s.choice === 'collapse') {
+        canonPrev = '<div class="canonprev" data-n="' + r.n + '"><span class="stbl" title="Stable paste number">' +
+          STABLE[r.n] + '</span><span class="arrow">&rarr; one row: </span><b>&ldquo;' +
+          esc(typed || r.canon) + '&rdquo;</b> <span class="src">' + (typed ? '(your name)' : '(default)') + '</span></div>';
+        if (!typed && r.simple && r.simple.toLowerCase() !== r.canon.toLowerCase()) {
+          canonPrev += '<button class="simplechip" data-n="' + r.n + '" data-s="' + esc(r.simple) + '">' +
+            'or simple: &ldquo;' + esc(r.simple) + '&rdquo; <span class="src">' +
+            (r.simpleSrc === 'list' ? 'from your working list — click to use' : 'prefix stripped — click to use') +
+            '</span></button>';
+        }
+      }
+      decCell =
+        '<div class="sugg">suggested: <b class="' + r.rec + '">' + r.rec + '</b></div>' +
+        '<div class="dbtns">' +
+        '<button class="dbtn c" data-n="' + r.n + '" data-c="collapse" aria-pressed="' + (s.choice==='collapse') + '">Collapse</button>' +
+        '<button class="dbtn k" data-n="' + r.n + '" data-c="keep" aria-pressed="' + (s.choice==='keep') + '">Keep</button>' +
+        '</div>' + canonPrev +
+        '<input class="note" data-n="' + r.n + '" placeholder="Type a heading name, decision or note…" value="' + esc(s.note || '') + '">';
+    } else {
+      const typed = (s.note || '').trim();
+      const cur = r.sp[0].text;
+      let renamePrev = '<div class="canonprev rn" data-n="' + r.n + '"' + (typed ? '' : ' hidden') + '>';
+      if (typed) renamePrev += '<span class="arrow">&rarr; renamed: </span><b>&ldquo;' + esc(typed) +
+        '&rdquo;</b> <span class="src">(your name)</span>';
+      renamePrev += '</div>';
+      let chip = '';
+      if (!typed && r.simple && r.simple.toLowerCase() !== cur.toLowerCase()) {
+        chip = '<button class="simplechip" data-n="' + r.n + '" data-s="' + esc(r.simple) + '">' +
+          'simple: &ldquo;' + esc(r.simple) + '&rdquo; <span class="src">' +
+          (r.simpleSrc === 'list' ? 'from your working list — click to use' : 'prefix stripped — click to use') +
+          '</span></button>';
+      }
+      decCell = '<div class="sugg" style="white-space:normal">' +
+        (r.cls === 'Common core' ? 'Shared row — no decision needed' : 'Dropdown-gated — no decision needed') +
+        '</div>' + renamePrev + chip +
+        '<input class="note" data-n="' + r.n + '" placeholder="Rename this heading (optional)…" value="' + esc(s.note || '') + '">' +
+        '<label class="okwrap"><input type="checkbox" class="okbox" data-n="' + r.n + '"' +
+        (s.ok ? ' checked' : '') + '> Confirmed as is</label>';
+    }
+    {
+      const ver = s.ver || {};
+      decCell += '<div class="verrow">' +
+        r.ents.split('+').map(e => '<span class="ver-ent' + (ver[e] ? ' on' : '') +
+          '" title="Green = seen mapped in an IRIS export check">' + e + (ver[e] ? ' \u2713' : '') + '</span>').join('') +
+        '<button class="finbtn' + (s.fin ? ' isfin' : '') + '" data-n="' + r.n + '">' +
+        (s.fin ? 'Unfinalise' : 'Mark final') + '</button></div>';
+      // Accepted cross-mappings: which nominal this heading is remapped to when
+      // pasted into another entity's TB. Populated ONLY by accepting a landing in
+      // the Check IRIS export dialog.
+      const acc = s.acc || {};
+      const accKeys = Object.keys(acc);
+      if (accKeys.length) {
+        const full = { ST: 'Sole Trader', PT: 'Partnership', LLP: 'LLP', LTD: 'Limited Company' };
+        decCell += '<div class="remap" title="Confirmed via Check IRIS export">On another TB this maps to: ' +
+          accKeys.map(e => '<b>' + (full[e] || e) + '</b> &rarr; &ldquo;' + esc(acc[e]) + '&rdquo;').join('; ') +
+          '</div>';
+      }
+    }
+    const notes = esc(r.notes).replace(/^WARNING:/, '<span class="warn">WARNING:</span>');
+    const trCls = s.fin ? 'finalr'
+                        : r.dec ? 'needdec' + (decided ? ' done' : '')
+                        : ((s.note || '').trim() ? 'renamed' : (s.ok ? 'confirmed' : ''));
+    secBuf += '<tr' + (trCls ? ' class="' + trCls + '"' : '') + '>' +
+      '<td class="num">' + r.n + '</td>' +
+      '<td class="concept">' + esc(r.concept) + '</td>' +
+      '<td>' + clsPill(r.cls) + '</td>' +
+      '<td>' + sps + '</td>' +
+      '<td class="decide">' + decCell + '</td>' +
+      '<td class="notes">' + notes + '</td></tr>';
+    secCount++; shown++;
+  }
+  flush();
+  tb.innerHTML = out;
+  emptyEl.hidden = shown > 0;
+  countEl.textContent = shown + ' of ' + DATA.rows.length + ' rows';
+  updateProg();
+}
+
+tb.addEventListener('change', e => {
+  const ok = e.target.closest('input.okbox');
+  if (!ok) return;
+  setSt(+ok.dataset.n, { ok: ok.checked });
+  render();
+});
+tb.addEventListener('click', e => {
+  const fb = e.target.closest('button.finbtn');
+  if (fb) {
+    const n = +fb.dataset.n;
+    setSt(n, { fin: !st(n).fin });
+    render();
+    return;
+  }
+  const sc = e.target.closest('button.simplechip');
+  if (sc) {
+    setSt(+sc.dataset.n, { note: sc.dataset.s });
+    render();
+    return;
+  }
+  const b = e.target.closest('button.dbtn');
+  if (!b) return;
+  const n = +b.dataset.n, c = b.dataset.c;
+  setSt(n, { choice: st(n).choice === c ? null : c });
+  render();
+});
+tb.addEventListener('input', e => {
+  const inp = e.target.closest('input.note');
+  if (!inp) return;
+  const n = +inp.dataset.n;
+  setSt(n, { note: inp.value });
+  const s = st(n);
+  const tr = inp.closest('tr');
+  tr.classList.toggle('done', !!(s.choice || (s.note && s.note.trim())));
+  const r = DATA.rows.find(x => x.n === n);
+  const typed = inp.value.trim();
+  const prev = tr.querySelector('.canonprev[data-n="' + n + '"]');
+  if (prev && r.dec) {
+    prev.innerHTML = '<span class="stbl" title="Stable paste number">' + STABLE[r.n] +
+      '</span><span class="arrow">&rarr; one row: </span><b>&ldquo;' +
+      esc(typed || r.canon) + '&rdquo;</b> <span class="src">' + (typed ? '(your name)' : '(default)') + '</span>';
+  } else if (prev) {
+    tr.classList.toggle('renamed', !!typed);
+    prev.hidden = !typed;
+    prev.innerHTML = typed ? '<span class="arrow">&rarr; renamed: </span><b>&ldquo;' + esc(typed) +
+      '&rdquo;</b> <span class="src">(your name)</span>' : '';
+  }
+  updateProg();
+});
+
+document.querySelectorAll('button.chip').forEach(b => b.addEventListener('click', () => {
+  mode = b.dataset.f;
+  document.querySelectorAll('button.chip').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  render();
+}));
+q.addEventListener('input', render);
+secsel.addEventListener('change', render);
+
+function exportText(){
+  const lines = [];
+  lines.push('UNIVERSAL TB RECONCILIATION - GEORGE\'S DECISIONS');
+  lines.push('Decided ' + decidedCount() + ' of ' + decRows.length + ' near-duplicate groups.');
+  lines.push('Format: #row  concept  ->  DECISION (suggestion was X)  | note');
+  lines.push('On COLLAPSE rows, as "..." is the heading the group becomes; (typed) = my own name, (default) = suggested default.');
+  lines.push('');
+  for (const r of decRows) {
+    const s = st(r.n);
+    const typed = (s.note || '').trim();
+    const choice = s.choice ? s.choice.toUpperCase() : 'UNDECIDED';
+    let line = '#' + r.n + '  ' + r.concept + '  ->  ' + choice;
+    if (s.choice === 'collapse') {
+      line += ' as "' + (typed || r.canon) + '" ' + (typed ? '(typed)' : '(default)');
+    }
+    line += ' (suggested ' + r.rec + ')';
+    if (typed && s.choice !== 'collapse') line += '  | ' + typed;
+    lines.push(line);
+  }
+  const renamed = DATA.rows.filter(r => !r.dec && (st(r.n).note || '').trim());
+  if (renamed.length) {
+    lines.push('');
+    lines.push('RENAMES ON NO-DECISION ROWS (' + renamed.length + '):');
+    for (const r of renamed) {
+      lines.push('#' + r.n + '  ' + r.concept + ':  "' + r.sp[0].text + '"  ->  "' + st(r.n).note.trim() + '"');
+    }
+  }
+  const confirmed = DATA.rows.filter(r => !r.dec && st(r.n).ok && !(st(r.n).note || '').trim());
+  if (confirmed.length) {
+    lines.push('');
+    lines.push('CONFIRMED AS-IS (no rename) (' + confirmed.length + '):');
+    for (const r of confirmed) {
+      lines.push('#' + r.n + '  ' + r.concept + ':  "' + r.sp[0].text + '"');
+    }
+  }
+  const accRows = DATA.rows.filter(r => { const a = st(r.n).acc; return a && Object.keys(a).length; });
+  if (accRows.length) {
+    lines.push('');
+    lines.push('ACCEPTED IRIS LANDINGS — deliberate cross-mappings George approved (' + accRows.length + '):');
+    for (const r of accRows) {
+      const a = st(r.n).acc;
+      for (const ent of Object.keys(a)) {
+        lines.push('#' + r.n + '  ' + r.concept + ':  on the ' + ent + ' TB this maps to "' + a[ent] + '" - approved');
+      }
+    }
+  }
+  const fins = DATA.rows.filter(r => st(r.n).fin);
+  if (fins.length) {
+    lines.push('');
+    lines.push('FINALISED — verified in IRIS and closed (' + fins.length + '):');
+    for (const r of fins) {
+      const ver = st(r.n).ver || {};
+      const badges = r.ents.split('+').map(e => e + (ver[e] ? ':OK' : ':unchecked')).join(' ');
+      lines.push('#' + r.n + '  ' + r.concept + '  [' + badges + ']');
+    }
+  }
+  return lines.join('\n');
+}
+
+// Live TB: the physical universal-TB row list under the CURRENT state.
+// Collapse -> one row named typed||default; Keep -> one row per spelling;
+// undecided rows follow the suggestion and are marked as such; renames applied.
+// Stable line numbers: every concept row reserves one slot per spelling in the
+// full 395-line expansion, so a heading keeps the SAME number in every copy,
+// regardless of collapse/keep choices or which rows are included. Gaps in a
+// paste are expected — they mean a slot's group collapsed or wasn't included.
+// Line-level view of the TB under the current state. Each line: heading, stable
+// number, applicable entities, owning concept row. "onlyMine" = decided/renamed/
+// ticked rows only, excluding finalised (finalised rows are done — out of the way).
+function buildTBLines(onlyMine){
+  const lines = [];
+  let undecided = 0;
+  for (const r of DATA.rows) {
+    const s = st(r.n);
+    const typed = (s.note || '').trim();
+    if (onlyMine && s.fin) continue;
+    if (r.dec) {
+      const decided = !!s.choice;
+      if (!decided) undecided++;
+      if (onlyMine && !decided) continue;
+      const choice = s.choice || (r.rec === 'Keep' ? 'keep' : 'collapse');
+      if (choice === 'collapse') {
+        lines.push({ h: typed || r.canon, num: STABLE[r.n], ents: r.ents.split('+'), rowN: r.n });
+      } else {
+        r.sp.forEach((sp, k) => lines.push({ h: sp.text, num: STABLE[r.n] + SPACING * k, ents: sp.ents, rowN: r.n }));
+      }
+    } else {
+      if (onlyMine && !typed && !s.ok) continue;
+      lines.push({ h: typed || r.sp[0].text, num: STABLE[r.n], ents: r.ents.split('+'), rowN: r.n });
+    }
+  }
+  return { lines: lines, undecided: undecided };
+}
+
+// IRIS paste format: one heading per line, TAB, value. No header row.
+function buildTB(onlyMine){
+  const b = buildTBLines(onlyMine);
+  const seq = document.getElementById('valmode').value === 'seq';
+  const tsv = b.lines.map(l => l.h + '\t' + (seq ? l.num : 1)).join('\n');
+  return { tsv: tsv, rows: b.lines.length, undecided: b.undecided };
+}
+
+// ---- IRIS export checker: trace stable-number values in an IRIS CSV back to headings.
+function parseCsvText(text){
+  const rows = []; let cur = ['']; let inQ = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (inQ) {
+      if (ch === '"') { if (text[i+1] === '"') { cur[cur.length-1] += '"'; i++; } else inQ = false; }
+      else cur[cur.length-1] += ch;
+    } else if (ch === '"') inQ = true;
+    else if (ch === ',') cur.push('');
+    else if (ch === '\n' || ch === '\r') {
+      if (cur.length > 1 || cur[0] !== '') rows.push(cur);
+      cur = [''];
+      if (ch === '\r' && text[i+1] === '\n') i++;
+    } else cur[cur.length-1] += ch;
+  }
+  if (cur.length > 1 || cur[0] !== '') rows.push(cur);
+  return rows;
+}
+function cellNumber(t){
+  let v = t.trim().replace(/[\u00a3$\s,]/g, '');
+  let neg = false;
+  const m = v.match(/^\((.*)\)$/);
+  if (m) { neg = true; v = m[1]; }
+  if (!/^-?\d+(\.\d+)?$/.test(v)) return null;
+  const num = parseFloat(v);
+  return neg ? -num : num;
+}
+const ROWBYN = new Map(DATA.rows.map(r => [r.n, r]));
+function normName(s){ return String(s).toLowerCase().replace(/\s+/g, ' ').trim(); }
+function classifyLanding(l, heading, entity){
+  const spExp = ROWBYN.get(l.rowN).sp.find(sp => sp.ents.indexOf(entity) >= 0);
+  const expName = spExp ? spExp.text : null;
+  const accName = (st(l.rowN).acc || {})[entity];
+  let status = 'review';
+  if (expName && normName(heading || '') === normName(expName)) status = 'ok';
+  else if (accName && normName(heading || '') === normName(accName)) status = 'acc';
+  return { status: status, exp: expName };
+}
+function creditVer(l, entity, status){
+  if (status === 'ok' || (status === 'acc' && l.ents.indexOf(entity) >= 0)) {
+    const s2 = st(l.rowN);
+    const ver = Object.assign({}, s2.ver); ver[entity] = true;
+    setSt(l.rowN, { ver: ver });
+  }
+}
+let lastReport = null;
+function runIrisCheck(entity, scope, rows){
+  const all = buildTBLines(false).lines;
+  const byNum = new Map(all.map(l => [l.num, l]));
+  const expected = (scope === 'mine' ? buildTBLines(true).lines : all).filter(l => l.ents.indexOf(entity) >= 0);
+
+  // Pass 1: pull (heading, value) pairs out of the export rows.
+  const entries = [];
+  for (const row of rows) {
+    let heading = null; const vals = [];
+    for (const cell of row) {
+      const t = cell.trim();
+      if (!t) continue;
+      const num = cellNumber(t);
+      if (num !== null) { if (heading !== null) vals.push(num); }
+      else if (heading === null) heading = t;
+    }
+    if (heading && /\btotals?\b/i.test(heading)) continue;
+    for (const v of vals) {
+      const iv = Math.abs(v);
+      if (Number.isInteger(iv) && iv > 0) entries.push({ iris: heading || '(unnamed row)', v: iv });
+    }
+  }
+
+  // Detect an export pasted with "values: all 1" (or any single repeated value):
+  // every heading carries the same value, so nothing can be traced.
+  const valCounts = {};
+  entries.forEach(e => { valCounts[e.v] = (valCounts[e.v] || 0) + 1; });
+  const maxSame = entries.length ? Math.max.apply(null, Object.values(valCounts)) : 0;
+  const allSameWarn = entries.length >= 5 && maxSame >= entries.length * 0.8;
+
+  // Pass 2: exact single-heading matches.
+  const seen = new Set();
+  const matched = [], leftover = [];
+  for (const e of entries) {
+    if (byNum.has(e.v) && !seen.has(e.v)) {
+      seen.add(e.v);
+      const l = byNum.get(e.v);
+      const c = classifyLanding(l, e.iris, entity);
+      matched.push({ num: e.v, ours: l.h, iris: e.iris, exp: c.exp, status: c.status, rowN: l.rowN });
+      creditVer(l, entity, c.status);
+    } else if (byNum.has(e.v)) { /* duplicate value - ignore */ }
+    else leftover.push(e);
+  }
+
+  // Pass 3: resolve leftover values as sums of k merged headings, where
+  // k = value % SPACING (IRIS combines entries that land on the same nominal).
+  let missingSet = new Set(expected.filter(l => !seen.has(l.num)).map(l => l.num));
+  // What was actually pasted (all entities): a combo can absorb a heading that
+  // belongs to another entity (e.g. Distribution costs pasted into a Sole
+  // Trader TB), so the candidate pool is everything pasted-but-not-yet-seen,
+  // not just the entity-expected set.
+  const pastedNotSeen = new Set((scope === 'mine' ? buildTBLines(true).lines : all)
+    .map(l => l.num).filter(n => !seen.has(n)));
+
+  // Find size-k subsets of `pool` summing to `target`. Returns up to a few hits;
+  // a node cap keeps a large pool from blowing up (declared ambiguous instead).
+  function findSubsets(target, k, pool){
+    const arr = pool.slice().sort((a, b) => a - b);
+    const hits = []; let nodes = 0;
+    (function rec(start, need, rem, acc){
+      if (hits.length > 3 || nodes++ > 20000) return;
+      if (need === 0) { if (rem === 0) hits.push(acc.slice()); return; }
+      for (let i = start; i <= arr.length - need; i++) {
+        if (arr[i] > rem) break;                        // sorted: nothing smaller ahead
+        acc.push(arr[i]); rec(i + 1, need - 1, rem - arr[i], acc); acc.pop();
+        if (hits.length > 3) return;
+      }
+    })(0, k, target, []);
+    return hits;
+  }
+
+  const combos = [], unresolved = [];
+  for (const e of leftover) {
+    // value % SPACING is exactly how many headings IRIS merged (k >= 2 here,
+    // since single headings were consumed in pass 2). k === 0 would mean SPACING
+    // headings merged — impossible in practice — so treat it as unknown.
+    const k = e.v % SPACING;
+    if (k < 2 || k > 200) { unresolved.push({ v: e.v, iris: e.iris, k: k, cands: 0 }); continue; }
+    // Prefer combinations built only from headings we expected but are missing;
+    // fall back to anything pasted-but-unseen (with at least one missing member
+    // so the combo explains a real gap).
+    let cands = findSubsets(e.v, k, Array.from(missingSet));
+    if (!cands.length) {
+      cands = findSubsets(e.v, k, Array.from(pastedNotSeen))
+        .filter(set => set.some(n => missingSet.has(n)));
+    }
+    if (cands.length === 1) {
+      const detail = cands[0].map(n => {
+        const l = byNum.get(n);
+        const c = classifyLanding(l, e.iris, entity);
+        creditVer(l, entity, c.status);
+        seen.add(n); missingSet.delete(n);
+        return { num: n, ours: l.h, status: c.status, rowN: l.rowN };
+      });
+      combos.push({ v: e.v, iris: e.iris, parts: detail });
+    } else {
+      unresolved.push({ v: e.v, iris: e.iris, k: k, cands: cands.length });
+    }
+  }
+  const missing = expected.filter(l => !seen.has(l.num)).sort((a, b) => a.num - b.num);
+  matched.sort((a, b) => a.num - b.num);
+  render();
+
+  const ename = { ST: 'Sole Trader', PT: 'Partnership', LLP: 'LLP', LTD: 'Limited Company' }[entity];
+  const good = matched.filter(m => m.status === 'ok');
+  const accepted = matched.filter(m => m.status === 'acc');
+  const review = matched.filter(m => m.status === 'review');
+  const stTag = { ok: 'correct', acc: 'accepted', review: 'REVIEW' };
+  const rep = [];
+  rep.push('IRIS EXPORT CHECK - ' + ename + ' TB - ' + new Date().toLocaleString());
+  rep.push('Compared against: ' + (scope === 'mine' ? 'my changes only' : 'full TB'));
+  rep.push('');
+
+  let h = '';
+  if (allSameWarn) {
+    const msg = 'This export looks like it was pasted with <b>values: all 1</b> — every heading carries the same value, ' +
+      'so headings can\'t be traced. Set the value dropdown to <b>values: stable row numbers</b>, re-paste into IRIS, ' +
+      're-export, and load it again.';
+    h += '<h3 class="badh">Can\'t trace this export</h3><p class="hint">' + msg + '</p>';
+    rep.push('WARNING: export used all-1 values; re-paste with stable row numbers to trace headings.');
+    rep.push('');
+  }
+  h += '<h3 class="okh">Correctly mapped (' + good.length + ') — landed on the expected ' + ename + ' nominal</h3>';
+  rep.push('CORRECTLY MAPPED (' + good.length + '):');
+  if (good.length) {
+    h += '<table><tr><th>&#8470;</th><th>Your heading</th><th>IRIS nominal it landed on</th></tr>' +
+      good.map(m => '<tr><td class="cnum">' + m.num + '</td><td>' + esc(m.ours) + '</td><td>' + esc(m.iris) + '</td></tr>').join('') + '</table>';
+    good.forEach(m => rep.push('  #' + m.num + '  ' + m.ours + '  ->  ' + m.iris));
+  }
+  if (combos.length) {
+    h += '<h3 class="okh">Combined on one nominal (' + combos.length + ') — IRIS summed these headings</h3>' +
+      '<table><tr><th>Value</th><th>IRIS nominal</th><th>Headings combined</th></tr>' +
+      combos.map(c => '<tr><td class="cnum">' + c.v + '</td><td>' + esc(c.iris) + '</td><td>' +
+        c.parts.map(p => '&#8470;' + p.num + ' ' + esc(p.ours) + ' <span class="src">(' + stTag[p.status] + ')</span>' +
+          (p.status === 'review' ? ' <button class="act accbtn" data-n="' + p.rowN + '" data-e="' + entity +
+            '" data-h="' + esc(c.iris) + '" data-on="0">Accept this combination</button>' :
+           p.status === 'acc' ? ' <button class="act accbtn" data-n="' + p.rowN + '" data-e="' + entity +
+            '" data-h="' + esc(c.iris) + '" data-on="1">Un-accept</button>' : '')
+        ).join('<br>') +
+        '</td></tr>').join('') + '</table>';
+    rep.push('');
+    rep.push('COMBINED ON ONE NOMINAL (' + combos.length + '):');
+    combos.forEach(c => {
+      rep.push('  value ' + c.v + ' on "' + c.iris + '" = ' + c.parts.map(p => '#' + p.num + ' ' + p.ours + ' (' + stTag[p.status] + ')').join(' + '));
+    });
+  }
+  if (accepted.length) {
+    h += '<h3 class="okh">Accepted landings (' + accepted.length + ') — cross-mappings you have approved</h3>' +
+      '<table><tr><th>&#8470;</th><th>Your heading</th><th>Landed on</th><th></th></tr>' +
+      accepted.map(m => '<tr><td class="cnum">' + m.num + '</td><td>' + esc(m.ours) + '</td><td>' + esc(m.iris) +
+        '</td><td><button class="act accbtn" data-n="' + m.rowN + '" data-e="' + entity + '" data-h="' + esc(m.iris) +
+        '" data-on="1">Un-accept</button></td></tr>').join('') + '</table>';
+    rep.push('');
+    rep.push('ACCEPTED LANDINGS (' + accepted.length + '):');
+    accepted.forEach(m => rep.push('  #' + m.num + '  ' + m.ours + '  ->  ' + m.iris + '  (approved)'));
+  }
+  if (review.length) {
+    h += '<h3 class="badh">Landed unexpectedly (' + review.length + ') — review these</h3>' +
+      '<table><tr><th>&#8470;</th><th>Your heading</th><th>Landed on</th><th>Expected</th><th></th></tr>' +
+      review.map(m => '<tr><td class="cnum">' + m.num + '</td><td>' + esc(m.ours) + '</td><td>' + esc(m.iris) + '</td><td>' +
+        (m.exp ? esc(m.exp) : '(not a ' + ename + ' heading — should not have carried a value in this TB)') +
+        '</td><td><button class="act accbtn" data-n="' + m.rowN + '" data-e="' + entity + '" data-h="' + esc(m.iris) +
+        '" data-on="0">Accept this landing</button></td></tr>').join('') + '</table>';
+    rep.push('');
+    rep.push('LANDED UNEXPECTEDLY - REVIEW (' + review.length + '):');
+    review.forEach(m => rep.push('  #' + m.num + '  ' + m.ours + '  landed on "' + m.iris + '"  expected "' + (m.exp || 'not a ' + ename + ' heading') + '"'));
+  }
+  if (unresolved.length) {
+    h += '<h3 class="badh">Combined totals that could not be resolved (' + unresolved.length + ')</h3>' +
+      '<table><tr><th>Value</th><th>IRIS nominal</th><th>Merged</th><th>Why</th></tr>' +
+      unresolved.map(u => '<tr><td class="cnum">' + u.v + '</td><td>' + esc(u.iris) + '</td><td class="cnum">' +
+        (u.k >= 2 ? u.k + ' headings' : '?') + '</td><td>' +
+        (u.cands > 1 ? u.cands + '+ possible combinations — ambiguous; check which of your pasted headings are unaccounted for' :
+         u.k < 2 ? 'value does not look like a valid heading or combination' :
+         'no combination of ' + u.k + ' missing headings sums to this') +
+        '</td></tr>').join('') + '</table>';
+    rep.push('');
+    rep.push('UNRESOLVED COMBINED TOTALS (' + unresolved.length + '):');
+    unresolved.forEach(u => rep.push('  value ' + u.v + ' on "' + u.iris + '"' +
+      (u.k >= 2 ? ' (' + u.k + ' headings merged; ' + (u.cands > 1 ? u.cands + '+ possible combinations' : 'no matching combination') + ')' : '')));
+  }
+  h += '<h3 class="badh">Not found (' + missing.length + ') — pasted but missing from this export (IRIS dropped or mis-mapped them)</h3>';
+  rep.push('');
+  rep.push('NOT FOUND (' + missing.length + '):');
+  if (missing.length) {
+    h += '<table><tr><th>&#8470;</th><th>Heading</th></tr>' +
+      missing.map(m => '<tr><td class="cnum">' + m.num + '</td><td>' + esc(m.h) + '</td></tr>').join('') + '</table>';
+    missing.forEach(m => rep.push('  #' + m.num + '  ' + m.h));
+  }
+  h += '<p class="hint">Green ' + ename + ' verification badges have been updated on every correctly mapped or accepted heading, ' +
+    'including inside combined nominals. Paste values as positive (debits) so combined entries sum rather than net off.</p>';
+  lastReport = rep.join('\n');
+  document.getElementById('checkres').innerHTML = h;
+}
+const checkdlg = document.getElementById('checkdlg');
+let lastCheck = null;
+document.getElementById('checkBtn').addEventListener('click', () => {
+  document.getElementById('checkres').innerHTML = '';
+  document.getElementById('ckfile').value = '';
+  checkdlg.showModal();
+});
+document.getElementById('ckClose').addEventListener('click', () => checkdlg.close());
+
+// --- .xlsx reader (no external library): a .xlsx is a ZIP of XML. Read the ZIP
+// central directory, inflate the needed parts with the browser's native
+// DecompressionStream, and pull the cell grid out of the worksheet XML.
+function colIndex(ref){ // "AB12" -> 27 (0-based column)
+  let n = 0; for (const ch of ref) { if (ch >= 'A' && ch <= 'Z') n = n * 26 + (ch.charCodeAt(0) - 64); else break; }
+  return n - 1;
+}
+async function inflateRaw(bytes){
+  const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+  return new Uint8Array(await new Response(stream).arrayBuffer());
+}
+async function readZip(buf){
+  const dv = new DataView(buf), u8 = new Uint8Array(buf);
+  // locate End Of Central Directory (signature 0x06054b50), scanning from the end
+  let eocd = -1;
+  for (let i = u8.length - 22; i >= 0 && i >= u8.length - 22 - 65536; i--) {
+    if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+  }
+  if (eocd < 0) throw new Error('not a zip');
+  let off = dv.getUint32(eocd + 16, true);
+  const count = dv.getUint16(eocd + 10, true);
+  const entries = {};
+  for (let i = 0; i < count; i++) {
+    if (dv.getUint32(off, true) !== 0x02014b50) break;
+    const method = dv.getUint16(off + 10, true);
+    const compSize = dv.getUint32(off + 20, true);
+    const nameLen = dv.getUint16(off + 28, true);
+    const extraLen = dv.getUint16(off + 30, true);
+    const commentLen = dv.getUint16(off + 32, true);
+    const localOff = dv.getUint32(off + 42, true);
+    const name = new TextDecoder().decode(u8.subarray(off + 46, off + 46 + nameLen));
+    // read the local header to find where the data actually starts
+    const lNameLen = dv.getUint16(localOff + 26, true);
+    const lExtraLen = dv.getUint16(localOff + 28, true);
+    const dataStart = localOff + 30 + lNameLen + lExtraLen;
+    entries[name] = { method: method, bytes: u8.subarray(dataStart, dataStart + compSize) };
+    off += 46 + nameLen + extraLen + commentLen;
+  }
+  return entries;
+}
+async function entryText(entries, name){
+  const e = entries[name];
+  if (!e) return null;
+  const raw = e.method === 0 ? e.bytes : await inflateRaw(e.bytes);
+  return new TextDecoder().decode(raw);
+}
+async function parseXlsxRows(buf){
+  if (typeof DecompressionStream === 'undefined')
+    throw new Error('This browser cannot read .xlsx here — please use the CSV export from IRIS instead.');
+  const entries = await readZip(buf);
+  const parser = new DOMParser();
+  const shared = [];
+  const ssText = await entryText(entries, 'xl/sharedStrings.xml');
+  if (ssText) {
+    const doc = parser.parseFromString(ssText, 'application/xml');
+    for (const si of doc.getElementsByTagName('si')) {
+      let s = ''; for (const t of si.getElementsByTagName('t')) s += t.textContent;
+      shared.push(s);
+    }
+  }
+  // first worksheet
+  const wsName = Object.keys(entries).find(n => /^xl\/worksheets\/sheet\d+\.xml$/.test(n));
+  const wsText = await entryText(entries, wsName);
+  const doc = parser.parseFromString(wsText, 'application/xml');
+  const rows = [];
+  for (const row of doc.getElementsByTagName('row')) {
+    const cells = [];
+    for (const c of row.getElementsByTagName('c')) {
+      const ref = c.getAttribute('r') || '';
+      const ci = colIndex(ref); if (ci < 0) continue;
+      const t = c.getAttribute('t');
+      let val = '';
+      if (t === 'inlineStr') { const is = c.getElementsByTagName('t')[0]; val = is ? is.textContent : ''; }
+      else { const v = c.getElementsByTagName('v')[0]; const raw = v ? v.textContent : '';
+             val = (t === 's') ? (shared[+raw] || '') : raw; }
+      cells[ci] = val;
+    }
+    for (let i = 0; i < cells.length; i++) if (cells[i] === undefined) cells[i] = '';
+    rows.push(cells);
+  }
+  return rows;
+}
+document.getElementById('ckfile').addEventListener('change', async e => {
+  const f = e.target.files && e.target.files[0];
+  if (!f) return;
+  const res = document.getElementById('checkres');
+  const entity = document.getElementById('ckentity').value;
+  const scope = document.getElementById('ckscope').value;
+  const isXlsx = /\.xlsx$/i.test(f.name) || f.type.indexOf('spreadsheet') >= 0;
+  try {
+    let rows;
+    if (isXlsx) { rows = await parseXlsxRows(await f.arrayBuffer()); }
+    else {
+      const text = await f.text();
+      // A .xlsx picked despite a .csv name still starts with the ZIP marker "PK".
+      if (text.charCodeAt(0) === 0x50 && text.charCodeAt(1) === 0x4b)
+        rows = await parseXlsxRows(await f.arrayBuffer());
+      else rows = parseCsvText(text);
+    }
+    lastCheck = { entity: entity, scope: scope, rows: rows };
+    runIrisCheck(entity, scope, rows);
+  } catch (err) {
+    res.innerHTML = '<p class="hint">Could not read that file: ' + esc(String(err && err.message || err)) +
+      '<br>Use IRIS\'s CSV export, or an .xlsx opened in a recent Chrome/Edge.</p>';
+  }
+});
+document.getElementById('ckCopyRep').addEventListener('click', () => {
+  if (!lastReport) { showToast('Run a check first'); return; }
+  copyText(lastReport, 'Report copied', 'Copy this check report');
+});
+wireDownload(document.getElementById('ckDlRep'), () => 'iris-check-report.md',
+             () => lastReport || 'No check has been run yet.');
+document.getElementById('checkres').addEventListener('click', e => {
+  const ab = e.target.closest('button.accbtn');
+  if (!ab) return;
+  const n = +ab.dataset.n, ent = ab.dataset.e;
+  const acc = Object.assign({}, st(n).acc);
+  if (ab.dataset.on === '1') delete acc[ent]; else acc[ent] = ab.dataset.h;
+  setSt(n, { acc: acc });
+  if (lastCheck) runIrisCheck(lastCheck.entity, lastCheck.scope, lastCheck.rows);
+});
+
+async function copyText(t, doneMsg, dlgTitle){
+  try { await navigator.clipboard.writeText(t); showToast(doneMsg); }
+  catch (e) {
+    document.querySelector('#exportdlg h2').textContent = dlgTitle;
+    document.getElementById('exporttxt').value = t;
+    dlg.showModal();
+    document.getElementById('exporttxt').select();
+  }
+}
+document.getElementById('copyBtn').addEventListener('click', () =>
+  copyText(exportText(), 'Copied — paste it into the Claude chat', 'Copy this and paste it to Claude'));
+document.getElementById('tbCopyBtn').addEventListener('click', () => {
+  const tb2 = buildTB(false);
+  copyText(tb2.tsv,
+    'Copied ' + tb2.rows + ' TB rows for IRIS' + (tb2.undecided ? ' (' + tb2.undecided + ' groups still on suggestions)' : ''),
+    'Copy this and paste it into IRIS');
+});
+document.getElementById('tbCopyMineBtn').addEventListener('click', () => {
+  const tb2 = buildTB(true);
+  if (!tb2.rows) { showToast('No decisions or renames yet — nothing to copy'); return; }
+  copyText(tb2.tsv,
+    'Copied ' + tb2.rows + ' row' + (tb2.rows > 1 ? 's' : '') + ' from your changes so far, ready for IRIS',
+    'Copy this and paste it into IRIS');
+});
+document.getElementById('dlgCopy').addEventListener('click', async () => {
+  const ta = document.getElementById('exporttxt');
+  ta.select();
+  try { await navigator.clipboard.writeText(ta.value); showToast('Copied'); } catch (e) { document.execCommand('copy'); }
+});
+document.getElementById('dlgClose').addEventListener('click', () => dlg.close());
+
+function wireDownload(btn, filenameFn, dataFn){
+  if (!(window.claude && window.claude.downloads)) return;
+  btn.hidden = false;
+  btn.addEventListener('click', async () => {
+    try {
+      await window.claude.downloads.save({ filename: filenameFn(), data: dataFn() });
+      showToast('Saved');
+    } catch (err) {
+      if (err && (err.code === 'unavailable' || err.code === 'not_granted' ||
+                  err.code === 'capability_disabled' || err.code === 'capability_removed')) btn.hidden = true;
+      else if (err && err.code === 'rate_limited') showToast('A save prompt is already open - try again in a moment');
+      else if (err && err.code !== 'declined') showToast('Could not save the file - use Copy instead');
+    }
+  });
+}
+wireDownload(document.getElementById('dlBtn'), () => 'universal-tb-decisions.md', exportText);
+wireDownload(document.getElementById('tbDlBtn'), () => 'universal-tb-live.txt', () => buildTB().tsv);
+
+// ---- GitHub sync: commit/restore progress via the contents API. Works from the
+// repo/local copy of this page; the claude.ai artifact copy is network-sandboxed.
+const GH_OWNER = 'GeorgeFarrellx', GH_REPO = 'PDF-Converter';
+const GH_PATH = 'Iris TBs/universal-tb-progress.json';
+const ghToken = document.getElementById('ghtoken');
+const ghBranch = document.getElementById('ghbranch');
+const ghStatus = document.getElementById('ghstatus');
+ghToken.value = localStorage.getItem('utb-gh-token') || '';
+ghBranch.value = localStorage.getItem('utb-gh-branch') || 'main';
+ghToken.addEventListener('input', () => localStorage.setItem('utb-gh-token', ghToken.value));
+ghBranch.addEventListener('input', () => localStorage.setItem('utb-gh-branch', ghBranch.value));
+function ghSay(msg){ ghStatus.textContent = msg; }
+function ghUrl(){
+  return 'https://api.github.com/repos/' + GH_OWNER + '/' + GH_REPO + '/contents/' +
+    GH_PATH.split('/').map(encodeURIComponent).join('/');
+}
+function ghHeaders(){
+  return { 'Authorization': 'Bearer ' + ghToken.value.trim(),
+           'Accept': 'application/vnd.github+json',
+           'X-GitHub-Api-Version': '2022-11-28' };
+}
+function ghGuard(){
+  if (window.claude) { ghSay('This claude.ai copy is sandboxed and cannot reach GitHub — download Iris TBs/universal-tb-review.html from the repo and use that copy for sync.'); return false; }
+  if (!ghToken.value.trim()) { ghSay('Paste a GitHub token first (fine-grained, this repo only, Contents: read and write).'); return false; }
+  if (!ghBranch.value.trim()) { ghSay('Enter a branch name (e.g. main).'); return false; }
+  return true;
+}
+function b64encodeUtf8(s){ return btoa(unescape(encodeURIComponent(s))); }
+function b64decodeUtf8(s){ return decodeURIComponent(escape(atob(s.replace(/\s/g, '')))); }
+async function ghSave(){
+  if (!ghGuard()) return;
+  ghSay('Saving…');
+  try {
+    const branch = ghBranch.value.trim();
+    let sha = null;
+    const probe = await fetch(ghUrl() + '?ref=' + encodeURIComponent(branch), { headers: ghHeaders() });
+    if (probe.status === 200) sha = (await probe.json()).sha;
+    else if (probe.status === 401) { ghSay('GitHub rejected the token (401). Check it has Contents read/write on this repo.'); return; }
+    else if (probe.status !== 404) { ghSay('GitHub error ' + probe.status + ' while checking the existing file.'); return; }
+    const payload = {
+      version: 1,
+      savedAt: new Date().toISOString(),
+      decidedGroups: decidedCount(), totalGroups: decRows.length,
+      state: state,
+      decisionsText: exportText()
+    };
+    const body = { message: 'Save universal TB review progress (' + payload.decidedGroups + '/' + payload.totalGroups + ' groups decided)',
+                   content: b64encodeUtf8(JSON.stringify(payload, null, 2)), branch: branch };
+    if (sha) body.sha = sha;
+    const put = await fetch(ghUrl(), { method: 'PUT', headers: ghHeaders(), body: JSON.stringify(body) });
+    if (put.ok) { ghSay('Saved to ' + GH_PATH + ' on ' + branch + ' at ' + new Date().toLocaleTimeString() + '.'); showToast('Progress saved to GitHub'); }
+    else if (put.status === 404) ghSay('Branch "' + branch + '" not found, or the token cannot write to this repo.');
+    else if (put.status === 409) ghSay('Conflict — the file changed on GitHub since checking. Press Save again.');
+    else ghSay('GitHub error ' + put.status + ' while saving.');
+  } catch (e) { ghSay('Could not reach GitHub — check your internet connection. (' + e + ')'); }
+}
+async function ghLoad(){
+  if (!ghGuard()) return;
+  if (!confirm('Load progress from GitHub? This REPLACES the decisions, renames and ticks currently in this browser.')) return;
+  ghSay('Loading…');
+  try {
+    const res = await fetch(ghUrl() + '?ref=' + encodeURIComponent(ghBranch.value.trim()), { headers: ghHeaders() });
+    if (res.status === 404) { ghSay('No saved progress found on that branch yet.'); return; }
+    if (res.status === 401) { ghSay('GitHub rejected the token (401).'); return; }
+    if (!res.ok) { ghSay('GitHub error ' + res.status + ' while loading.'); return; }
+    const payload = JSON.parse(b64decodeUtf8((await res.json()).content));
+    if (!payload || typeof payload.state !== 'object') { ghSay('The progress file on GitHub has an unexpected format.'); return; }
+    state = payload.state || {}; saveState(); render();
+    ghSay('Loaded progress saved ' + (payload.savedAt ? new Date(payload.savedAt).toLocaleString() : '(unknown time)') + '.');
+    showToast('Progress loaded from GitHub');
+  } catch (e) { ghSay('Could not reach GitHub — check your internet connection. (' + e + ')'); }
+}
+document.getElementById('ghSaveBtn').addEventListener('click', ghSave);
+document.getElementById('ghLoadBtn').addEventListener('click', ghLoad);
+if (window.claude) ghSay('Note: this claude.ai copy cannot reach GitHub. Use the copy of this page saved in the repo (Iris TBs/universal-tb-review.html) for sync; everything else works here.');
+
+document.getElementById('fillBtn').addEventListener('click', () => {
+  let filled = 0;
+  for (const r of decRows) {
+    const s = st(r.n);
+    if (!s.choice && !(s.note && s.note.trim())) {
+      setSt(r.n, { choice: r.rec === 'Keep' ? 'keep' : 'collapse' });
+      filled++;
+    }
+  }
+  render();
+  showToast(filled ? 'Filled ' + filled + ' undecided row' + (filled>1?'s':'') + ' with the suggestions' : 'Nothing left undecided');
+});
+document.getElementById('clearBtn').addEventListener('click', () => {
+  if (!confirm('Clear ALL your decisions, renames, ticks, verification marks and finalised flags on this page?')) return;
+  state = {}; saveState(); render();
+});
+
+render();
+</script>
